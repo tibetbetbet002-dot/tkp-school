@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>โรงเรียนบ้านทุ่งข้าวพวง</title>
-<meta name="description" content="เว็บไซต์โรงเรียนบ้านทุ่งข้าวพวง อำเภอเชียงดาว จังหวัดเชียงใหม่ สังกัด สพป.เชียงใหม่ เขต 3 ข่าวสาร กิจกรรม บุคลากร และระบบลงเวลาปฏิบัติราชการ">
+<meta name="description" content="เว็บไซต์โรงเรียนบ้านทุ่งข้าวพวง อำเภอเชียงดาว จังหวัดเชียงใหม่ สังกัด สพป.เชียงใหม่ เขต 3 ข่าวสาร กิจกรรม ผู้บริหาร และบุคลากร">
 <meta name="theme-color" content="#4c1f7e">
 <meta property="og:title" content="โรงเรียนบ้านทุ่งข้าวพวง">
 <meta property="og:image" content="assets/logo.png">
@@ -12,10 +12,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
-<link rel="icon" id="favicon" href="assets/logo-192.png">
+<link rel="icon" href="assets/logo-192.png">
 <link rel="apple-touch-icon" href="assets/logo-192.png">
 </head>
-<body>
+<body class="site">
 <div id="demoBar" class="demo-bar hidden">โหมดทดลอง — ข้อมูลเป็นตัวอย่างและเก็บในเครื่องนี้เท่านั้น</div>
 
 <div class="topbar">
@@ -24,11 +24,12 @@
     <span class="spacer"></span>
     <span id="topPhone" class="hidden"></span>
     <a id="topFb" class="hidden" target="_blank" rel="noopener">Facebook</a>
-    <a href="admin.html">🔒 เข้าสู่ระบบผู้ดูแล</a>
+    <a href="checkin.html">🕘 ระบบลงเวลาครู</a>
+    <a href="admin.html">🔒 เข้าสู่ระบบ</a>
   </div>
 </div>
 
-<nav class="nav">
+<nav class="nav" id="nav">
   <div class="container nav-in">
     <a class="brand" href="#top"><img id="navLogo" src="assets/logo-192.png" alt="ตราโรงเรียน"><div><b data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</b><small data-s="schoolNameEn">Ban Thung Khao Phuang School</small></div></a>
     <button class="nav-toggle" aria-label="เมนู" onclick="document.querySelector('.nav-links').classList.toggle('open')">
@@ -38,11 +39,12 @@
       <a href="#about">ข้อมูลโรงเรียน</a>
       <a href="#director">ผู้บริหาร</a>
       <a href="#news">ข่าวสาร</a>
+      <a href="#gallery" id="navGallery" class="hidden">ภาพกิจกรรม</a>
       <a href="#calendar">ปฏิทิน</a>
       <a href="#staff">บุคลากร</a>
       <a id="navOit" target="_blank" rel="noopener" class="hidden">ITA / OIT</a>
       <a href="#contact">ติดต่อ</a>
-      <a class="btn btn-primary btn-sm" href="checkin.html" style="color:#fff">ลงเวลาครู</a>
+      <a class="nav-teacher" href="checkin.html">ลงเวลาครู</a>
     </div>
   </div>
 </nav>
@@ -51,40 +53,39 @@
 
 <header class="hero" id="top">
   <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-deco" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="container hero-in">
-    <div>
-      <div class="en" data-s="affiliation">สังกัดสำนักงานเขตพื้นที่การศึกษาประถมศึกษาเชียงใหม่ เขต 3</div>
-      <h1>โรงเรียน<span id="heroName">บ้านทุ่งข้าวพวง</span></h1>
-      <div class="en" data-s="schoolNameEn">Ban Thung Khao Phuang School</div>
-      <div class="motto" data-s="motto">เรียนดี มีวินัย ใฝ่คุณธรรม</div>
-      <div class="row">
-        <a class="btn btn-gold btn-lg" href="checkin.html">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 17c1-2 3-3 5-3s4 1 5 3"/></svg>
-          สแกนหน้าลงเวลา
-        </a>
-        <a class="btn btn-ghost btn-lg" href="#news">ข่าวประชาสัมพันธ์</a>
+    <div class="hero-text">
+      <div class="en anim" style="--d:0s" data-s="affiliation">สังกัดสำนักงานเขตพื้นที่การศึกษาประถมศึกษาเชียงใหม่ เขต 3</div>
+      <h1 class="anim" style="--d:.1s">โรงเรียน<span id="heroName">บ้านทุ่งข้าวพวง</span></h1>
+      <div class="en anim" style="--d:.2s" data-s="schoolNameEn">Ban Thung Khao Phuang School</div>
+      <div class="motto anim" style="--d:.3s" data-s="motto">เรียนดี มีวินัย ใฝ่คุณธรรม</div>
+      <div class="row anim" style="--d:.4s">
+        <a class="btn btn-gold btn-lg" href="#about">รู้จักโรงเรียน</a>
+        <a class="btn btn-ghost btn-lg" href="#news">ข่าวสารล่าสุด</a>
       </div>
     </div>
-    <div class="hero-card">
-      <div class="hero-logo"><img id="heroLogo" src="assets/logo.png" alt="ตราโรงเรียน"></div>
-      <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="clockDate"></div></div>
+    <div class="hero-emblem anim" style="--d:.2s">
+      <div class="ring r1"></div><div class="ring r2"></div>
+      <div class="hero-logo"><img id="heroLogo" src="assets/logo.png" alt="ตราโรงเรียนบ้านทุ่งข้าวพวง"></div>
     </div>
   </div>
+  <a href="#stats" class="scroll-hint" aria-label="เลื่อนลง"><span></span></a>
 </header>
 
-<div class="container stats">
+<div class="container stats" id="stats">
   <div class="grid g4">
-    <div class="stat"><div class="n" id="stTeachers">-</div><div class="l">ครูและบุคลากร</div></div>
-    <div class="stat"><div class="n" id="stStudents">-</div><div class="l">นักเรียน</div></div>
-    <div class="stat"><div class="n" id="stClasses">-</div><div class="l">ระดับชั้นเรียน</div></div>
-    <div class="stat"><div class="n" id="stToday">-</div><div class="l">ครูลงเวลาวันนี้</div></div>
+    <div class="stat reveal" style="--d:0s"><div class="n" data-count="stTeachers" id="stTeachers">-</div><div class="l">ครูและบุคลากร</div></div>
+    <div class="stat reveal" style="--d:.08s"><div class="n" id="stStudents">-</div><div class="l">นักเรียน</div></div>
+    <div class="stat reveal" style="--d:.16s"><div class="n" id="stClasses">-</div><div class="l">ระดับชั้นเรียน</div></div>
+    <div class="stat reveal" style="--d:.24s"><div class="n" id="stNews">-</div><div class="l" id="stNewsLabel">ข่าวและกิจกรรม</div></div>
   </div>
 </div>
 
 <!-- ผู้บริหาร -->
 <section id="director">
   <div class="container">
-    <div class="director card card-lg">
+    <div class="director card card-lg reveal">
       <div class="director-photo"><img id="dirPhoto" src="assets/logo.png" alt="ผู้อำนวยการ" style="object-fit:contain;padding:28px"></div>
       <div>
         <span class="eyebrow">สารจากผู้บริหาร</span>
@@ -99,18 +100,18 @@
 <!-- ข้อมูลโรงเรียน -->
 <section id="about" style="padding-top:0">
   <div class="container grid g2" style="align-items:start;gap:40px">
-    <div>
+    <div class="reveal">
       <span class="eyebrow">ข้อมูลพื้นฐาน</span>
       <h2>ปลูกปัญญา ปลูกคุณธรรม<br>ให้งอกงามเหมือนรวงข้าว</h2>
       <p class="muted" data-s="about"></p>
       <div class="tabs" id="infoTabs" style="margin:18px 0 14px"></div>
-      <div class="card" id="infoBody" style="white-space:pre-line;min-height:120px"></div>
+      <div class="card info-body" id="infoBody"></div>
     </div>
     <div class="grid" style="gap:16px">
-      <div class="card feature"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l10-4 10 4-10 4z"/><path d="M6 9v5c0 1.7 2.7 3 6 3s6-1.3 6-3V9"/></svg></div><div><h3>วิชาการเข้มแข็ง</h3><p class="muted" style="margin:0">จัดการเรียนรู้ที่เน้นผู้เรียนเป็นสำคัญ ส่งเสริมการอ่านออก เขียนได้ คิดเลขเป็น</p></div></div>
-      <div class="card feature"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></div><div><h3>คุณธรรมนำชีวิต</h3><p class="muted" style="margin:0">ปลูกฝังความซื่อสัตย์ มีวินัย จิตอาสา และความกตัญญู</p></div></div>
-      <div class="card feature"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 7 8 4 4 4c0 5 3 8 8 8zM12 12c0-4 3-7 8-7 0 4-3 7-8 7z"/></svg></div><div><h3>รักษ์ท้องถิ่น</h3><p class="muted" style="margin:0">เรียนรู้วิถีชุมชน ภูมิปัญญาท้องถิ่น และหลักปรัชญาของเศรษฐกิจพอเพียง</p></div></div>
-      <div class="card row" style="gap:14px"><span class="color-dots"><i style="background:#5e2a96"></i><i style="background:#f4bf1f"></i><i style="background:#fff"></i></span><div><b>สีประจำโรงเรียน</b><div class="muted" data-s="schoolColors">ม่วง - เหลือง - ขาว</div></div></div>
+      <div class="card feature reveal" style="--d:.05s"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l10-4 10 4-10 4z"/><path d="M6 9v5c0 1.7 2.7 3 6 3s6-1.3 6-3V9"/></svg></div><div><h3>วิชาการเข้มแข็ง</h3><p class="muted" style="margin:0">จัดการเรียนรู้ที่เน้นผู้เรียนเป็นสำคัญ ส่งเสริมการอ่านออก เขียนได้ คิดเลขเป็น</p></div></div>
+      <div class="card feature reveal" style="--d:.12s"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></div><div><h3>คุณธรรมนำชีวิต</h3><p class="muted" style="margin:0">ปลูกฝังความซื่อสัตย์ มีวินัย จิตอาสา และความกตัญญู</p></div></div>
+      <div class="card feature reveal" style="--d:.19s"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 7 8 4 4 4c0 5 3 8 8 8zM12 12c0-4 3-7 8-7 0 4-3 7-8 7z"/></svg></div><div><h3>รักษ์ท้องถิ่น</h3><p class="muted" style="margin:0">เรียนรู้วิถีชุมชน ภูมิปัญญาท้องถิ่น และหลักปรัชญาของเศรษฐกิจพอเพียง</p></div></div>
+      <div class="card row reveal" style="gap:14px;--d:.26s"><span class="color-dots"><i style="background:#5e2a96"></i><i style="background:#f4bf1f"></i><i style="background:#fff"></i></span><div><b>สีประจำโรงเรียน</b><div class="muted" data-s="schoolColors">ม่วง - เหลือง - ขาว</div></div></div>
     </div>
   </div>
 </section>
@@ -118,22 +119,30 @@
 <!-- ข่าวสาร -->
 <section id="news" class="sec-white">
   <div class="container">
-    <div class="sec-head"><span class="eyebrow">ข่าวประชาสัมพันธ์</span><h2>ข่าวสารและกิจกรรม</h2><p class="muted">ติดตามความเคลื่อนไหวของโรงเรียน</p></div>
-    <div class="chips" id="newsChips"></div>
+    <div class="sec-head reveal"><span class="eyebrow">ข่าวประชาสัมพันธ์</span><h2>ข่าวสารและกิจกรรม</h2><p class="muted">ติดตามความเคลื่อนไหวของโรงเรียน</p></div>
+    <div class="chips reveal" id="newsChips"></div>
     <div class="grid g3" id="newsList"><div class="empty"><span class="spinner"></span></div></div>
     <div class="center" style="margin-top:22px"><button class="btn hidden" id="newsMore">ดูข่าวทั้งหมด</button></div>
   </div>
 </section>
 
+<!-- ภาพกิจกรรม -->
+<section id="gallery" class="hidden">
+  <div class="container">
+    <div class="sec-head reveal"><span class="eyebrow">ภาพกิจกรรม</span><h2>บรรยากาศในโรงเรียน</h2></div>
+    <div class="gallery" id="galleryGrid"></div>
+  </div>
+</section>
+
 <!-- ปฏิทิน + Facebook -->
-<section id="calendar">
+<section id="calendar" class="sec-white">
   <div class="container grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;align-items:start">
-    <div>
+    <div class="reveal">
       <span class="eyebrow">ปฏิทินกิจกรรม</span>
       <h2>กิจกรรมที่กำลังจะมาถึง</h2>
       <div id="eventList" class="grid" style="gap:12px"><div class="empty"><span class="spinner"></span></div></div>
     </div>
-    <div>
+    <div class="reveal" style="--d:.1s">
       <span class="eyebrow">ติดตามเรา</span>
       <h2>Facebook โรงเรียน</h2>
       <div class="card" style="padding:10px;overflow:hidden" id="fbBox"><div class="empty">ยังไม่ได้ตั้งค่าเพจ Facebook</div></div>
@@ -142,50 +151,52 @@
 </section>
 
 <!-- บุคลากร -->
-<section id="staff" class="sec-white">
+<section id="staff">
   <div class="container">
-    <div class="sec-head"><span class="eyebrow">บุคลากร</span><h2>คณะครูและบุคลากร</h2></div>
+    <div class="sec-head reveal"><span class="eyebrow">บุคลากร</span><h2>คณะครูและบุคลากร</h2></div>
     <div class="grid g4" id="staffList"><div class="empty"><span class="spinner"></span></div></div>
   </div>
 </section>
 
-<!-- บริการ / ลิงก์ -->
-<section id="links">
+<!-- ลิงก์ -->
+<section id="links" class="sec-white">
   <div class="container">
-    <div class="sec-head"><span class="eyebrow">บริการและลิงก์</span><h2>ระบบงานและหน่วยงานที่เกี่ยวข้อง</h2></div>
-    <div class="grid g4" id="serviceCards">
-      <a class="card service" href="checkin.html"><span class="ic">🕘</span><b>ลงเวลาปฏิบัติราชการ</b><small class="muted">สแกนใบหน้า + GPS</small></a>
-      <a class="card service" href="checkin.html#leave"><span class="ic">📝</span><b>ขอลา / ไปราชการ</b><small class="muted">ยื่นคำขอออนไลน์</small></a>
-      <a class="card service hidden" id="oitCard" target="_blank" rel="noopener"><span class="ic">📂</span><b>ITA / OIT</b><small class="muted">การเปิดเผยข้อมูลสาธารณะ</small></a>
-      <a class="card service" href="admin.html"><span class="ic">🔒</span><b>ระบบผู้บริหาร</b><small class="muted">สำหรับผู้ดูแล</small></a>
+    <div class="sec-head reveal"><span class="eyebrow">ลิงก์และบริการ</span><h2>หน่วยงานและเอกสารที่เกี่ยวข้อง</h2></div>
+    <div class="grid g3" id="linkGroups"></div>
+    <div class="grid g4" style="margin-top:20px">
+      <a class="card service reveal hidden" id="oitCard" target="_blank" rel="noopener"><span class="ic">📂</span><b>ITA / OIT</b><small class="muted">การเปิดเผยข้อมูลสาธารณะ</small></a>
+      <a class="card service reveal hidden" id="fbCard" target="_blank" rel="noopener" style="--d:.06s"><span class="ic">👍</span><b>Facebook</b><small class="muted">เพจโรงเรียน</small></a>
+      <a class="card service reveal" href="#contact" style="--d:.12s"><span class="ic">📍</span><b>แผนที่โรงเรียน</b><small class="muted">การเดินทาง</small></a>
+      <a class="card service reveal" href="checkin.html" style="--d:.18s"><span class="ic">🧑‍🏫</span><b>สำหรับครู</b><small class="muted">ระบบลงเวลา / ขอลา</small></a>
     </div>
-    <div class="grid g3" id="linkGroups" style="margin-top:20px"></div>
   </div>
 </section>
 
 <!-- ติดต่อ -->
-<section id="contact" class="sec-white">
+<section id="contact">
   <div class="container grid g2" style="gap:32px">
-    <div>
+    <div class="reveal">
       <span class="eyebrow">ติดต่อเรา</span>
       <h2 data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</h2>
       <p class="muted" data-s="address"></p>
       <div class="grid" style="gap:10px;margin-top:16px" id="contactList"></div>
     </div>
-    <div id="mapBox"><div class="card empty">ยังไม่ได้ตั้งค่าพิกัดโรงเรียน</div></div>
+    <div id="mapBox" class="reveal" style="--d:.1s"><div class="card empty">ยังไม่ได้ตั้งค่าพิกัดโรงเรียน</div></div>
   </div>
 </section>
 
 <footer>
   <div class="container grid g3">
     <div class="row" style="align-items:flex-start;flex-wrap:nowrap"><img src="assets/logo-192.png" alt="" style="width:64px;height:64px;border-radius:50%"><div><h4 data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</h4><p class="small" data-s="address"></p></div></div>
-    <div><h4>ลิงก์ด่วน</h4><p class="small"><a href="checkin.html">ลงเวลาปฏิบัติราชการ</a><br><a href="checkin.html#leave">ขอลา / ไปราชการ</a><br><a href="admin.html">ระบบผู้บริหาร</a><br><a id="footOit" target="_blank" rel="noopener" class="hidden">ITA / OIT</a></p></div>
-    <div><h4>ผู้อำนวยการ</h4><p class="small"><span data-s="directorName"></span><br><span data-s="directorTitle"></span></p></div>
+    <div><h4>เมนู</h4><p class="small"><a href="#about">ข้อมูลโรงเรียน</a><br><a href="#news">ข่าวสาร</a><br><a href="#staff">บุคลากร</a><br><a id="footOit" target="_blank" rel="noopener" class="hidden">ITA / OIT</a></p></div>
+    <div><h4>สำหรับครูและบุคลากร</h4><p class="small"><a href="checkin.html">ระบบลงเวลาปฏิบัติราชการ</a><br><a href="checkin.html#leave">ขอลา / ไปราชการ</a><br><a href="admin.html">เข้าสู่ระบบผู้ดูแล</a></p></div>
   </div>
   <div class="container small" style="border-top:1px solid rgba(255,255,255,.12);margin-top:24px;padding-top:18px;text-align:center">© <span id="year"></span> <span data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</span> · <span data-s="affiliation"></span></div>
 </footer>
 
+<button class="to-top" id="toTop" aria-label="กลับขึ้นด้านบน" onclick="scrollTo({top:0,behavior:'smooth'})">↑</button>
 <div id="newsModal" class="modal-bg hidden" onclick="if(event.target===this)this.classList.add('hidden')"><div class="modal" id="newsModalBody"></div></div>
+<div id="lightbox" class="lightbox hidden" onclick="this.classList.add('hidden')"><img id="lightboxImg" alt=""><div id="lightboxCap"></div></div>
 
 <script src="assets/config.js"></script>
 <script src="assets/core.js"></script>
@@ -196,23 +207,33 @@
   if (U.DEMO) $('demoBar').classList.remove('hidden');
   $('year').textContent = new Date().getFullYear() + 543;
 
-  function tick() {
-    var n = new Date();
-    $('clock').textContent = n.toLocaleTimeString('th-TH', { hour12: false });
-    $('clockDate').textContent = n.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  // ---------- อนิเมชันตอนเลื่อนหน้า ----------
+  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: .12, rootMargin: '0px 0px -40px 0px' }) : null;
+  function reveal(root) { (root || document).querySelectorAll('.reveal:not(.in)').forEach(function (el) { io ? io.observe(el) : el.classList.add('in'); }); }
+  reveal();
+  function countUp(el, to) {
+    to = Number(to); if (!to) { el.textContent = '-'; return; }
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = to; return; }
+    var t0 = null;
+    (function step(t) { t0 = t0 || t; var p = Math.min(1, (t - t0) / 1400); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); })(performance.now());
   }
-  tick(); setInterval(tick, 1000);
+  var nav = $('nav'), toTop = $('toTop');
+  addEventListener('scroll', function () { var y = scrollY; nav.classList.toggle('scrolled', y > 30); toTop.classList.toggle('show', y > 700); }, { passive: true });
 
+  // ---------- ข่าว ----------
   var NEWS = [], CAT = 'ทั้งหมด', SHOW_ALL = false;
   function renderNews() {
     var list = NEWS.filter(function (n) { return CAT === 'ทั้งหมด' || (n.category || 'ข่าวประชาสัมพันธ์') === CAT; });
     var shown = SHOW_ALL ? list : list.slice(0, 6);
     $('newsMore').classList.toggle('hidden', SHOW_ALL || list.length <= 6);
-    $('newsList').innerHTML = shown.length ? shown.map(function (n) {
-      return '<article class="card news-card" data-id="' + esc(n.id) + '"><div class="news-img">' +
-        (n.image ? '<img loading="lazy" src="' + esc(n.image) + '" alt="">' : '<img src="assets/logo-192.png" alt="" style="width:96px;height:96px;object-fit:contain;opacity:.9">') +
-        '</div><div class="news-body"><div class="row" style="gap:6px"><span class="badge">' + esc(n.category || 'ข่าวประชาสัมพันธ์') + '</span><span class="small muted">' + (String(n.pinned) === 'true' ? '📌 ' : '') + U.thaiDate(n.date, true) + '</span></div><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p></div></article>';
+    $('newsList').innerHTML = shown.length ? shown.map(function (n, i) {
+      return '<article class="card news-card reveal" style="--d:' + (i % 3) * .08 + 's" data-id="' + esc(n.id) + '"><div class="news-img">' +
+        (n.image ? '<img loading="lazy" src="' + esc(n.image) + '" alt="">' : '<img src="assets/logo-192.png" alt="" class="news-ph">') +
+        '</div><div class="news-body"><div class="row" style="gap:6px"><span class="badge">' + esc(n.category || 'ข่าวประชาสัมพันธ์') + '</span><span class="small muted">' + (String(n.pinned) === 'true' ? '📌 ' : '') + U.thaiDate(n.date, true) + '</span></div><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p><span class="more">อ่านต่อ →</span></div></article>';
     }).join('') : '<div class="empty card" style="grid-column:1/-1">ยังไม่มีข่าวในหมวดนี้</div>';
+    reveal($('newsList'));
   }
   $('newsChips').onclick = function (e) {
     if (!e.target.dataset.cat) return;
@@ -229,82 +250,87 @@
       '<div class="row">' + (n.link ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="' + esc(n.link) + '">ดูรายละเอียด / รูปภาพเพิ่มเติม</a>' : '') + '<button class="btn" onclick="document.getElementById(\'newsModal\').classList.add(\'hidden\')">ปิด</button></div>';
     $('newsModal').classList.remove('hidden');
   });
-
-  function eventDate(e) {
-    var p = e.date.split('-'), m = U.TH_MONTHS[+p[1] - 1];
-    return '<div class="ev-date"><b>' + (+p[2]) + '</b><small>' + m.slice(0, 3) + '.</small></div>';
-  }
+  $('galleryGrid').addEventListener('click', function (e) {
+    var a = e.target.closest('[data-src]'); if (!a) return;
+    $('lightboxImg').src = a.dataset.src; $('lightboxCap').textContent = a.dataset.cap; $('lightbox').classList.remove('hidden');
+  });
 
   API.call('getPublic').then(function (d) {
     var s = d.settings, logo = s.logoUrl || 'assets/logo.png';
     document.querySelectorAll('[data-s]').forEach(function (el) { var v = s[el.dataset.s]; if (v) el.textContent = v; });
     $('heroName').textContent = s.schoolName.replace(/^โรงเรียน/, '');
     $('navLogo').src = $('heroLogo').src = logo;
-    if (s.heroImage) $('heroBg').style.backgroundImage = 'url("' + s.heroImage + '")';
-    $('stTeachers').textContent = d.staff.length;
-    $('stStudents').textContent = s.studentsCount || '-';
-    $('stClasses').textContent = s.classesCount || '-';
+    if (s.heroImage) { $('heroBg').style.backgroundImage = 'url("' + s.heroImage + '")'; $('heroBg').classList.add('photo'); }
 
-    // ประกาศวิ่ง
+    countUp($('stTeachers'), d.staff.length);
+    countUp($('stStudents'), s.studentsCount);
+    countUp($('stClasses'), s.classesCount);
+    if (s.founded) { $('stNewsLabel').textContent = 'ปีที่ก่อตั้ง (พ.ศ.)'; $('stNews').textContent = s.founded; } else countUp($('stNews'), d.news.length);
+
     if (s.announcement) { $('tickerText').textContent = s.announcement; $('ticker').classList.remove('hidden'); }
-    // แถบบน
     if (s.phone) { $('topPhone').textContent = '☎ ' + s.phone; $('topPhone').classList.remove('hidden'); }
-    if (s.facebook) { $('topFb').href = s.facebook; $('topFb').classList.remove('hidden'); }
+    if (s.facebook) ['topFb', 'fbCard'].forEach(function (id) { $(id).href = s.facebook; $(id).classList.remove('hidden'); });
     if (s.oitUrl) ['navOit', 'oitCard', 'footOit'].forEach(function (id) { $(id).href = s.oitUrl; $(id).classList.remove('hidden'); });
 
-    // ผู้บริหาร
     if (s.directorName) $('dirName').textContent = s.directorName;
     if (s.directorPhoto) { $('dirPhoto').src = s.directorPhoto; $('dirPhoto').removeAttribute('style'); }
     if (s.directorMessage) $('dirMsg').textContent = s.directorMessage;
 
-    // ข้อมูลพื้นฐาน (แสดงเฉพาะหัวข้อที่มีข้อมูล)
     var info = [['ประวัติ', s.history], ['วิสัยทัศน์', s.vision], ['พันธกิจ', s.mission], ['เป้าประสงค์', s.goals],
       ['อัตลักษณ์', s.identity], ['เอกลักษณ์', s.uniqueness], ['ปรัชญา / คำขวัญ', s.motto]].filter(function (x) { return x[1]; });
     $('infoTabs').innerHTML = info.map(function (x, i) { return '<button data-i="' + i + '" class="' + (i ? '' : 'active') + '">' + x[0] + '</button>'; }).join('');
-    function showInfo(i) { $('infoBody').textContent = info[i] ? info[i][1] : ''; $('infoTabs').querySelectorAll('button').forEach(function (b) { b.classList.toggle('active', +b.dataset.i === i); }); }
+    function showInfo(i) {
+      var b = $('infoBody'); b.classList.remove('swap'); void b.offsetWidth; b.classList.add('swap');
+      b.textContent = info[i] ? info[i][1] : '';
+      $('infoTabs').querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', +x.dataset.i === i); });
+    }
     $('infoTabs').onclick = function (e) { if (e.target.dataset.i) showInfo(+e.target.dataset.i); };
     showInfo(0);
 
-    // ข่าว
     NEWS = d.news;
     $('newsChips').innerHTML = ['ทั้งหมด'].concat(d.newsCategories || []).map(function (c, i) { return '<button data-cat="' + c + '" class="' + (i ? '' : 'active') + '">' + c + '</button>'; }).join('');
     renderNews();
 
-    // ปฏิทิน
+    // ภาพกิจกรรม (จากรูปข่าว)
+    var pics = d.news.filter(function (n) { return n.image; }).slice(0, 8);
+    if (pics.length) {
+      $('gallery').classList.remove('hidden'); $('navGallery').classList.remove('hidden');
+      $('galleryGrid').innerHTML = pics.map(function (n, i) {
+        return '<button class="g-item reveal" style="--d:' + (i % 4) * .06 + 's" data-src="' + esc(n.image) + '" data-cap="' + esc(n.title) + '"><img loading="lazy" src="' + esc(n.image) + '" alt=""><span>' + esc(n.title) + '</span></button>';
+      }).join('');
+      reveal($('galleryGrid'));
+    }
+
     var today = U.todayStr();
     var upcoming = (d.events || []).filter(function (e) { return (e.dateEnd || e.date) >= today; }).slice(0, 6);
-    $('eventList').innerHTML = upcoming.length ? upcoming.map(function (e) {
-      return '<div class="card event">' + eventDate(e) + '<div><b>' + esc(e.title) + '</b><div class="small muted">' + U.thaiDate(e.date) + (e.dateEnd ? ' – ' + U.thaiDate(e.dateEnd) : '') + (e.time ? ' · ' + esc(e.time) : '') + (e.place ? ' · ' + esc(e.place) : '') + '</div>' + (e.detail ? '<div class="small">' + esc(e.detail) + '</div>' : '') + '</div></div>';
+    $('eventList').innerHTML = upcoming.length ? upcoming.map(function (e, i) {
+      var p = e.date.split('-');
+      return '<div class="card event reveal" style="--d:' + i * .06 + 's"><div class="ev-date"><b>' + (+p[2]) + '</b><small>' + U.TH_MONTHS[+p[1] - 1].slice(0, 3) + '.</small></div><div><b>' + esc(e.title) + '</b><div class="small muted">' + U.thaiDate(e.date) + (e.dateEnd ? ' – ' + U.thaiDate(e.dateEnd) : '') + (e.time ? ' · ' + esc(e.time) : '') + (e.place ? ' · ' + esc(e.place) : '') + '</div>' + (e.detail ? '<div class="small">' + esc(e.detail) + '</div>' : '') + '</div></div>';
     }).join('') : '<div class="card empty">ยังไม่มีกิจกรรมที่กำลังจะมาถึง</div>';
 
-    // Facebook
     if (s.facebook) $('fbBox').innerHTML = '<iframe title="Facebook โรงเรียน" src="https://www.facebook.com/plugins/page.php?href=' + encodeURIComponent(s.facebook) +
       '&tabs=timeline&width=500&height=520&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" style="border:none;overflow:hidden;width:100%;height:520px;border-radius:14px" scrolling="no" frameborder="0" allow="encrypted-media" loading="lazy"></iframe>';
 
-    // บุคลากร
-    $('staffList').innerHTML = d.staff.length ? d.staff.map(function (t) {
+    $('staffList').innerHTML = d.staff.length ? d.staff.map(function (t, i) {
       var av = t.photo ? '<img class="avatar" src="' + esc(t.photo) + '" alt="">' : '<div class="avatar">' + esc(t.name.replace(/^(นาย|นางสาว|นาง|ว่าที่.*?\s)/, '').charAt(0)) + '</div>';
-      return '<div class="card staff">' + av + '<b>' + esc(t.name) + '</b><span class="muted small">' + esc(t.position) + '</span></div>';
+      return '<div class="card staff reveal" style="--d:' + (i % 4) * .06 + 's">' + av + '<b>' + esc(t.name) + '</b><span class="muted small">' + esc(t.position) + '</span></div>';
     }).join('') : '<div class="empty card" style="grid-column:1/-1">ยังไม่มีข้อมูลบุคลากร</div>';
 
-    // ลิงก์
     var groups = {};
     (d.links || []).forEach(function (l) { (groups[l.category] = groups[l.category] || []).push(l); });
-    $('linkGroups').innerHTML = Object.keys(groups).map(function (g) {
-      return '<div class="card"><h3>' + esc(g) + '</h3><ul class="link-list">' + groups[g].map(function (l) { return '<li><a target="_blank" rel="noopener" href="' + esc(l.url) + '">' + esc(l.title) + '</a></li>'; }).join('') + '</ul></div>';
+    $('linkGroups').innerHTML = Object.keys(groups).map(function (g, i) {
+      return '<div class="card reveal" style="--d:' + i * .08 + 's"><h3>' + esc(g) + '</h3><ul class="link-list">' + groups[g].map(function (l) { return '<li><a target="_blank" rel="noopener" href="' + esc(l.url) + '">' + esc(l.title) + '</a></li>'; }).join('') + '</ul></div>';
     }).join('');
 
-    // ติดต่อ
     var contacts = [];
     if (s.phone) contacts.push(['☎️', 'โทรศัพท์', '<a href="tel:' + esc(s.phone) + '">' + esc(s.phone) + '</a>']);
     if (s.email) contacts.push(['✉️', 'อีเมล', '<a href="mailto:' + esc(s.email) + '">' + esc(s.email) + '</a>']);
     if (s.facebook) contacts.push(['👍', 'Facebook', '<a target="_blank" rel="noopener" href="' + esc(s.facebook) + '">เพจโรงเรียนบ้านทุ่งข้าวพวง</a>']);
     if (s.mapUrl) contacts.push(['📍', 'แผนที่', '<a target="_blank" rel="noopener" href="' + esc(s.mapUrl) + '">เปิดใน Google Maps</a>']);
-    $('contactList').innerHTML = contacts.map(function (c) { return '<div class="card row" style="padding:14px 18px;flex-wrap:nowrap"><span style="font-size:1.4rem">' + c[0] + '</span><div><span class="muted small">' + c[1] + '</span><br>' + c[2] + '</div></div>'; }).join('');
+    $('contactList').innerHTML = contacts.map(function (c) { return '<div class="card row contact-item" style="padding:14px 18px;flex-wrap:nowrap"><span style="font-size:1.4rem">' + c[0] + '</span><div><span class="muted small">' + c[1] + '</span><br>' + c[2] + '</div></div>'; }).join('');
     if (s.lat && s.lng) $('mapBox').innerHTML = '<iframe class="map" style="height:380px" loading="lazy" title="แผนที่โรงเรียน" src="https://maps.google.com/maps?q=' + encodeURIComponent(s.lat + ',' + s.lng) + '&z=15&output=embed"></iframe>';
+    reveal();
   }).catch(function (e) { U.toast(e.message, 'bad'); });
-
-  API.call('todayBoard').then(function (b) { $('stToday').textContent = b.rows.filter(function (r) { return r.timeIn; }).length + '/' + b.total; }).catch(function () {});
 })();
 </script>
 </body>

@@ -3,43 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ลงเวลาปฏิบัติราชการ</title>
+<title>ระบบลงเวลาครู</title>
 <meta name="theme-color" content="#4c1f7e">
+<meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
-<link rel="icon" id="favicon">
+<link rel="icon" href="assets/logo-192.png">
+<link rel="apple-touch-icon" href="assets/logo-192.png">
 </head>
 <body class="app-bg">
-<div id="demoBar" class="demo-bar hidden">โหมดทดลอง — ข้อมูลเก็บในเครื่องนี้เท่านั้น · ลงทะเบียนใบหน้าได้ที่ <a href="admin.html">หน้าผู้ดูแล</a> (รหัส admin1234)</div>
+<div id="demoBar" class="demo-bar hidden">โหมดทดลอง — ข้อมูลเก็บในเครื่องนี้เท่านั้น (PIN ครูตัวอย่าง 1234)</div>
 <nav class="nav">
   <div class="container nav-in">
-    <a class="brand" href="index.html"><img id="navLogo" alt=""><div><b data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</b><small>ระบบลงเวลาปฏิบัติราชการ</small></div></a>
+    <a class="brand" href="index.html"><img id="navLogo" src="assets/logo-192.png" alt=""><div><b data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</b><small>ระบบลงเวลาปฏิบัติราชการ</small></div></a>
     <div class="spacer"></div>
-    <a class="btn btn-sm" href="index.html">หน้าหลัก</a>
+    <a class="btn btn-sm" href="index.html">หน้าเว็บโรงเรียน</a>
   </div>
 </nav>
 
 <main class="container" style="max-width:760px;padding-bottom:60px">
   <div class="page-head center">
+    <div id="hello" class="badge hidden" style="margin-bottom:8px"></div>
     <h1 style="font-size:1.7rem;margin-bottom:2px">ลงเวลาปฏิบัติราชการ</h1>
     <div class="muted" id="nowText"></div>
   </div>
 
   <div class="tabs" id="tabs" style="margin:16px 0 22px">
     <button data-tab="scan" class="active">สแกนลงเวลา</button>
+    <button data-tab="enroll">ลงทะเบียนใบหน้า</button>
     <button data-tab="leave">ขอลา / ไปราชการ</button>
     <button data-tab="history">ประวัติของฉัน</button>
   </div>
 
   <!-- ===== สแกนลงเวลา ===== -->
   <div data-panel="scan">
-    <div id="demoGps" class="card hidden" style="margin-bottom:14px;background:var(--gold-100);border-color:#f2dc94">
-      <b>โหมดทดลอง:</b> ยังไม่ได้ตั้งพิกัดโรงเรียน กดปุ่มด้านล่างเพื่อใช้ตำแหน่งปัจจุบันเป็นจุดศูนย์กลางโรงเรียน
-      <div style="margin-top:10px"><button class="btn btn-sm btn-primary" id="demoSetLoc">ตั้งตำแหน่งนี้เป็นโรงเรียน</button></div>
-    </div>
-
     <div class="gps" id="gpsBox" style="margin-bottom:14px">
       <span class="dot"></span>
       <div style="flex:1"><b id="gpsTitle">กำลังตรวจสอบตำแหน่ง...</b><div class="small muted" id="gpsSub">ต้องอยู่ในบริเวณโรงเรียนจึงจะลงเวลาได้</div></div>
@@ -58,7 +57,7 @@
         <div class="placeholder" id="placeholder">
           <div>
             <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 17c1-2 3-3 5-3s4 1 5 3"/></svg>
-            <p style="margin:10px 0 0;font-family:var(--font-head)">กดปุ่มด้านล่างเพื่อเริ่มสแกนใบหน้า</p>
+            <p style="margin:10px 0 0;font-family:var(--font-head)" id="phText">กดปุ่มด้านล่างเพื่อเริ่มสแกนใบหน้า</p>
           </div>
         </div>
         <div class="msg hidden" id="scanMsg"></div>
@@ -66,6 +65,7 @@
       <div class="center" style="margin-top:18px">
         <button class="btn btn-primary btn-lg" id="startBtn" style="min-width:240px">เริ่มสแกนใบหน้า</button>
         <button class="btn hidden" id="cancelBtn">ยกเลิก</button>
+        <label class="row small muted" style="justify-content:center;font-weight:400;margin-top:12px"><input type="checkbox" id="autoScan"> เปิดกล้องสแกนทันทีเมื่อเข้าหน้านี้</label>
       </div>
     </div>
 
@@ -77,6 +77,20 @@
     </div>
   </div>
 
+  <!-- ===== ลงทะเบียนใบหน้า ===== -->
+  <div data-panel="enroll" class="hidden">
+    <div class="card card-lg">
+      <h3>ลงทะเบียนใบหน้าด้วยตัวเอง</h3>
+      <p class="muted small">ทำครั้งเดียว หลังจากนี้ระบบจะจำใบหน้าได้เองและลงเวลาให้อัตโนมัติ ใช้รหัส PIN ที่ได้รับจากผู้ดูแลระบบ<br>ถ้าเคยลงทะเบียนแล้วและต้องการลงใหม่ ให้ติดต่อผู้ดูแลระบบ</p>
+      <form id="enrollForm" class="grid g2" style="gap:0 14px">
+        <div class="field"><label>ชื่อ-สกุล</label><select name="teacherId" class="teacherSel" required></select></div>
+        <div class="field"><label>รหัส PIN</label><input name="pin" type="password" inputmode="numeric" maxlength="8" required placeholder="PIN"></div>
+      </form>
+      <div class="scanner" style="max-width:340px;margin-top:6px"><video id="eVideo" playsinline muted></video><div class="frame" id="eFrame"></div><div class="msg" id="eMsg">เลือกชื่อ ใส่ PIN แล้วกดเริ่ม</div></div>
+      <div class="center" style="margin-top:16px"><button class="btn btn-primary btn-lg" id="enrollBtn">เริ่มลงทะเบียนใบหน้า</button></div>
+    </div>
+  </div>
+
   <!-- ===== ขอลา ===== -->
   <div data-panel="leave" class="hidden">
     <form class="card card-lg" id="leaveForm">
@@ -84,7 +98,7 @@
       <p class="muted small">ระบบจะส่งคำขอถึงผู้บริหารเพื่อพิจารณาอนุมัติ</p>
       <div class="grid g2" style="gap:0 16px">
         <div class="field"><label>ชื่อ-สกุล</label><select name="teacherId" class="teacherSel" required></select></div>
-        <div class="field"><label>รหัส PIN</label><input name="pin" type="password" inputmode="numeric" maxlength="8" required placeholder="PIN 4 หลัก"></div>
+        <div class="field"><label>รหัส PIN</label><input name="pin" type="password" inputmode="numeric" maxlength="8" required placeholder="PIN"></div>
         <div class="field"><label>ประเภท</label><select name="type" id="leaveType"></select></div>
         <div></div>
         <div class="field"><label>ตั้งแต่วันที่</label><input name="from" type="date" required></div>
@@ -118,10 +132,15 @@
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var PUB = null, POS = null, MODE = new Date().getHours() < 12 ? 'in' : 'out', cancelled = false, resetTimer = null;
-  if (U.DEMO) { $('demoBar').classList.remove('hidden'); window.addEventListener('demo-line', function (e) { U.toast('LINE (จำลอง)\n' + e.detail, 'line'); }); }
+  var PUB = null, MODE = new Date().getHours() < 12 ? 'in' : 'out', cancelled = false, resetTimer = null;
+  // จำครูที่ใช้เครื่องนี้ไว้ (เก็บเฉพาะในเครื่องนี้)
+  function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem('tkp_' + k) || 'null'); localStorage.setItem('tkp_' + k, JSON.stringify(v)); } catch (e) { } return null; }
+  var ME = store('me');
+  if (U.DEMO) $('demoBar').classList.remove('hidden');
 
   setInterval(function () { $('nowText').textContent = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + new Date().toLocaleTimeString('th-TH', { hour12: false }) + ' น.'; }, 1000);
+  function showHello() { if (ME) { $('hello').textContent = '👋 สวัสดี ' + ME.name; $('hello').classList.remove('hidden'); } }
+  showHello();
 
   // แท็บ
   function showTab(name) {
@@ -130,24 +149,24 @@
     if (name !== 'scan') stopScan();
   }
   $('tabs').onclick = function (e) { if (e.target.dataset.tab) { showTab(e.target.dataset.tab); history.replaceState(null, '', '#' + e.target.dataset.tab); } };
-  if (location.hash && document.querySelector('[data-tab="' + location.hash.slice(1) + '"]')) showTab(location.hash.slice(1));
+  var startTab = location.hash.slice(1);
+  if (startTab && document.querySelector('[data-tab="' + startTab + '"]')) showTab(startTab); else startTab = 'scan';
 
-  // โหมด มา / กลับ
   function setMode(m) { MODE = m; document.querySelectorAll('#modeSeg button').forEach(function (b) { b.classList.toggle('active', b.dataset.mode === m); }); }
   $('modeSeg').onclick = function (e) { if (e.target.dataset.mode) setMode(e.target.dataset.mode); };
   setMode(MODE);
 
-  // ข้อมูลโรงเรียน
+  var auto = store('autoScan'); $('autoScan').checked = auto === null ? true : !!auto;
+  $('autoScan').onchange = function () { store('autoScan', this.checked); };
+
   function loadPublic() {
     return API.call('getPublic').then(function (d) {
       PUB = d;
-      var logo = d.settings.logoUrl || U.defaultLogo;
-      $('navLogo').src = logo; $('favicon').href = logo;
+      if (d.settings.logoUrl) $('navLogo').src = d.settings.logoUrl;
       document.querySelectorAll('[data-s]').forEach(function (el) { el.textContent = d.settings[el.dataset.s] || el.textContent; });
-      var opts = '<option value="">— เลือกชื่อ —</option>' + d.staff.map(function (t) { return '<option value="' + U.esc(t.id) + '">' + U.esc(t.name) + '</option>'; }).join('');
-      document.querySelectorAll('.teacherSel').forEach(function (s) { s.innerHTML = opts; });
+      var opts = '<option value="">— เลือกชื่อ —</option>' + d.staff.map(function (t) { return '<option value="' + U.esc(t.id) + '">' + U.esc(t.name) + (t.hasFace ? '' : ' (ยังไม่ลงทะเบียนใบหน้า)') + '</option>'; }).join('');
+      document.querySelectorAll('.teacherSel').forEach(function (s) { s.innerHTML = opts; if (ME) s.value = ME.id; });
       $('leaveType').innerHTML = d.leaveTypes.map(function (t) { return '<option>' + t + '</option>'; }).join('');
-      $('demoGps').classList.toggle('hidden', !(U.DEMO && !d.settings.lat));
       checkGps().catch(function () { });
     });
   }
@@ -157,21 +176,15 @@
   function checkGps() {
     setGps('', 'กำลังตรวจสอบตำแหน่ง...', 'ต้องอยู่ในบริเวณโรงเรียนจึงจะลงเวลาได้');
     return U.getPosition().then(function (p) {
-      POS = p;
       var s = PUB && PUB.settings;
       if (!s || !s.lat) { setGps('bad', 'ยังไม่ได้ตั้งพิกัดโรงเรียน', 'ติดต่อผู้ดูแลระบบ'); return p; }
       var d = U.distance(p.lat, p.lng, +s.lat, +s.lng), inside = d <= +s.radius;
       setGps(inside ? 'ok' : 'bad', inside ? 'อยู่ในบริเวณโรงเรียน ✓' : 'อยู่นอกบริเวณโรงเรียน',
         'ห่างจุดศูนย์กลาง ' + Math.round(d) + ' ม. (อนุญาต ' + s.radius + ' ม.) · ความแม่นยำ ±' + Math.round(p.accuracy) + ' ม.');
       return p;
-    }).catch(function (e) { POS = null; setGps('bad', 'ไม่สามารถระบุตำแหน่ง', e.message); throw e; });
+    }).catch(function (e) { setGps('bad', 'ไม่สามารถระบุตำแหน่ง', e.message); throw e; });
   }
-  $('gpsRefresh').onclick = function () { checkGps().catch(function () {}); };
-  $('demoSetLoc').onclick = function () {
-    U.getPosition().then(function (p) {
-      return API.call('settingsSave', { password: 'admin1234', settings: { lat: p.lat.toFixed(6), lng: p.lng.toFixed(6) } });
-    }).then(function () { U.toast('ตั้งพิกัดโรงเรียนแล้ว', 'ok'); return loadPublic(); }).catch(function (e) { U.toast(e.message, 'bad'); });
-  };
+  $('gpsRefresh').onclick = function () { checkGps().catch(function () { }); };
 
   // สแกน
   function msg(text, ok) { var m = $('scanMsg'); m.classList.remove('hidden'); m.textContent = text; $('frame').classList.toggle('ok', !!ok); }
@@ -196,6 +209,8 @@
       var pos = await posP;
       Face.stop();
       var r = await API.call('checkin', { descriptor: face.descriptor, photo: face.photo, lat: pos.lat, lng: pos.lng, accuracy: pos.accuracy, mode: MODE });
+      ME = { id: r.teacherId, name: r.name }; store('me', ME); showHello();
+      document.querySelectorAll('.teacherSel').forEach(function (s) { s.value = ME.id; });
       showResult(true, r, face.photo);
     } catch (e) {
       if (e.message === 'ยกเลิก') return;
@@ -213,7 +228,7 @@
     if (ok) {
       var cls = r.status === 'สาย' || r.status === 'กลับก่อนเวลา' ? 'b-late' : 'b-ok';
       var title = r.already ? 'ลงเวลามาไว้แล้ว' : (r.mode === 'in' ? 'ลงเวลามาสำเร็จ' : 'ลงเวลากลับสำเร็จ');
-      box.className = 'card card-lg result ok';
+      box.className = 'card card-lg result ok pop';
       box.innerHTML = (photo ? '<img src="' + photo + '" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin:0 auto 12px;border:4px solid var(--ok-bg);transform:scaleX(-1)">' : '<div class="big">✓</div>') +
         '<h2 style="margin-bottom:2px">' + U.esc(r.name) + '</h2><div class="muted">' + U.esc(r.position || '') + '</div>' +
         '<div style="font:600 2.6rem var(--font-head);color:var(--purple-700);margin:12px 0 4px">' + U.hm(r.time) + ' น.</div>' +
@@ -221,8 +236,11 @@
         '<p class="small muted" style="margin:12px 0 18px">ห่างจุดศูนย์กลางโรงเรียน ' + r.distance + ' ม. · ความตรงกันของใบหน้า ' + r.score + '%' + (r.missingIn ? '<br><b style="color:var(--warn)">วันนี้ยังไม่ได้ลงเวลามา กรุณาแจ้งผู้ดูแล</b>' : '') + '</p>' +
         '<button class="btn btn-primary" id="againBtn">เสร็จสิ้น</button>';
     } else {
-      box.className = 'card card-lg result bad';
-      box.innerHTML = '<div class="big">!</div><h2>ลงเวลาไม่สำเร็จ</h2><p class="muted">' + U.esc(r.message) + '</p><button class="btn btn-primary" id="againBtn">ลองอีกครั้ง</button>';
+      var notEnrolled = r.code === 'FACE';
+      box.className = 'card card-lg result bad pop';
+      box.innerHTML = '<div class="big">!</div><h2>ลงเวลาไม่สำเร็จ</h2><p class="muted">' + U.esc(r.message) + '</p>' +
+        '<div class="row" style="justify-content:center"><button class="btn btn-primary" id="againBtn">ลองอีกครั้ง</button>' + (notEnrolled ? '<button class="btn" id="goEnroll">ลงทะเบียนใบหน้า</button>' : '') + '</div>';
+      if (notEnrolled) $('goEnroll').onclick = function () { resetScan(); showTab('enroll'); };
     }
     $('againBtn').onclick = resetScan;
     clearTimeout(resetTimer); resetTimer = setTimeout(resetScan, ok ? 10000 : 20000);
@@ -235,8 +253,30 @@
       $('board').innerHTML = b.rows.length ? '<div class="table-wrap" style="border:0"><table><thead><tr><th>ชื่อ</th><th>มา</th><th>กลับ</th><th>สถานะ</th></tr></thead><tbody>' +
         b.rows.map(function (r) { return '<tr><td>' + U.esc(r.name) + '</td><td>' + U.hm(r.timeIn) + '</td><td>' + U.hm(r.timeOut) + '</td><td>' + (r.status ? '<span class="badge ' + (r.status === 'สาย' ? 'b-late' : 'b-ok') + '">' + r.status + '</span>' : '') + '</td></tr>'; }).join('') +
         '</tbody></table></div>' : '<div class="empty">ยังไม่มีการลงเวลาวันนี้</div>';
-    }).catch(function () {});
+    }).catch(function () { });
   }
+
+  // ลงทะเบียนใบหน้าด้วยตัวเอง
+  function eStatus(m, ok) { $('eMsg').textContent = m; $('eFrame').classList.toggle('ok', !!ok); }
+  $('enrollBtn').onclick = async function () {
+    var f = $('enrollForm'), btn = this;
+    if (!f.teacherId.value || !f.pin.value) { U.toast('กรุณาเลือกชื่อและใส่ PIN', 'bad'); return; }
+    btn.disabled = true;
+    try {
+      eStatus('กำลังตรวจสอบ PIN...');
+      await API.call('verifyPin', { teacherId: f.teacherId.value, pin: f.pin.value });
+      eStatus('กำลังเปิดกล้อง...');
+      await Face.load(); await Face.start($('eVideo'));
+      var r = await Face.enroll($('eVideo'), eStatus);
+      Face.stop();
+      var t = await API.call('teacherEnrollFace', { teacherId: f.teacherId.value, pin: f.pin.value, faces: r.faces, photo: r.photo });
+      ME = { id: t.id, name: t.name }; store('me', ME); showHello();
+      eStatus('ลงทะเบียนสำเร็จ ✓ ลงเวลาด้วยการสแกนหน้าได้เลย', true);
+      U.toast('ลงทะเบียนใบหน้าสำเร็จ', 'ok');
+      setTimeout(function () { showTab('scan'); loadPublic(); }, 1500);
+    } catch (e) { Face.stop(); eStatus(e.message); U.toast(e.message, 'bad'); }
+    finally { btn.disabled = false; }
+  };
 
   // ขอลา
   var today = U.todayStr();
@@ -279,7 +319,10 @@
     }).catch(function (e) { $('histOut').innerHTML = ''; U.toast(e.message, 'bad'); });
   };
 
-  loadPublic().catch(function (e) { U.toast(e.message, 'bad'); });
+  loadPublic().then(function () {
+    // ถ้าเปิดสแกนอัตโนมัติไว้ ให้เริ่มทันทีเมื่อเข้าหน้า
+    if ($('autoScan').checked && startTab === 'scan') { $('phText').textContent = 'กำลังเปิดกล้อง...'; $('startBtn').click(); }
+  }).catch(function (e) { U.toast(e.message, 'bad'); });
   loadBoard(); setInterval(loadBoard, 60000);
 })();
 </script>
