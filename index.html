@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>โรงเรียนบ้านทุ่งข้าวพวง</title>
+<meta name="description" content="เว็บไซต์โรงเรียนบ้านทุ่งข้าวพวง ข่าวสาร กิจกรรม บุคลากร และระบบลงเวลาปฏิบัติราชการของครู">
+<meta name="theme-color" content="#4c1f7e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" id="favicon">
+</head>
+<body>
+<div id="demoBar" class="demo-bar hidden">โหมดทดลอง — ข้อมูลเป็นตัวอย่างและเก็บในเครื่องนี้เท่านั้น ดูวิธีเชื่อม Google Sheets ใน “คู่มือติดตั้ง.md”</div>
+
+<nav class="nav">
+  <div class="container nav-in">
+    <a class="brand" href="#top"><img id="navLogo" alt="ตราโรงเรียน"><div><b data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</b><small data-s="schoolNameEn">Ban Thung Khao Phuang School</small></div></a>
+    <button class="nav-toggle" aria-label="เมนู" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <div class="nav-links" onclick="if(event.target.tagName==='A')this.classList.remove('open')">
+      <a href="#about">เกี่ยวกับเรา</a>
+      <a href="#news">ข่าวสาร</a>
+      <a href="#staff">บุคลากร</a>
+      <a href="#contact">ติดต่อ</a>
+      <a class="btn btn-primary btn-sm" href="checkin.html" style="color:#fff">ลงเวลาครู</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="container hero-in">
+    <div>
+      <div class="en" data-s="affiliation">สังกัดสำนักงานเขตพื้นที่การศึกษาประถมศึกษา</div>
+      <h1>โรงเรียน<span id="heroName">บ้านทุ่งข้าวพวง</span></h1>
+      <div class="en" data-s="schoolNameEn">Ban Thung Khao Phuang School</div>
+      <div class="motto" data-s="motto">เรียนดี มีวินัย ใฝ่คุณธรรม</div>
+      <div class="row" style="justify-content:inherit">
+        <a class="btn btn-gold btn-lg" href="checkin.html">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 17c1-2 3-3 5-3s4 1 5 3"/></svg>
+          สแกนหน้าลงเวลา
+        </a>
+        <a class="btn btn-ghost btn-lg" href="#news">ข่าวประชาสัมพันธ์</a>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-logo"><img id="heroLogo" alt="ตราโรงเรียน"></div>
+      <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="clockDate"></div></div>
+    </div>
+  </div>
+</header>
+
+<div class="container stats">
+  <div class="grid g4">
+    <div class="stat"><div class="n" id="stTeachers">-</div><div class="l">ครูและบุคลากร</div></div>
+    <div class="stat"><div class="n" id="stStudents">-</div><div class="l">นักเรียน</div></div>
+    <div class="stat"><div class="n" id="stClasses">-</div><div class="l">ระดับชั้นเรียน</div></div>
+    <div class="stat"><div class="n" id="stToday">-</div><div class="l">ครูลงเวลาวันนี้</div></div>
+  </div>
+</div>
+
+<section id="about">
+  <div class="container grid g2" style="align-items:center;gap:48px">
+    <div>
+      <span class="eyebrow">เกี่ยวกับโรงเรียน</span>
+      <h2>ปลูกปัญญา ปลูกคุณธรรม<br>ให้งอกงามเหมือนรวงข้าว</h2>
+      <p class="muted" data-s="about"></p>
+      <div class="card" style="background:linear-gradient(135deg,var(--purple-700),var(--purple-500));color:#fff;border:0;margin-top:20px">
+        <h3 style="color:var(--gold-400)">วิสัยทัศน์</h3>
+        <p style="margin:0" data-s="vision"></p>
+      </div>
+    </div>
+    <div class="grid" style="gap:16px">
+      <div class="card feature"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l10-4 10 4-10 4z"/><path d="M6 9v5c0 1.7 2.7 3 6 3s6-1.3 6-3V9"/></svg></div><div><h3>วิชาการเข้มแข็ง</h3><p class="muted" style="margin:0">จัดการเรียนรู้ที่เน้นผู้เรียนเป็นสำคัญ ส่งเสริมการอ่านออก เขียนได้ คิดเลขเป็น</p></div></div>
+      <div class="card feature"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></div><div><h3>คุณธรรมนำชีวิต</h3><p class="muted" style="margin:0">ปลูกฝังความซื่อสัตย์ มีวินัย จิตอาสา และความกตัญญู</p></div></div>
+      <div class="card feature"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 7 8 4 4 4c0 5 3 8 8 8zM12 12c0-4 3-7 8-7 0 4-3 7-8 7z"/></svg></div><div><h3>รักษ์ท้องถิ่น</h3><p class="muted" style="margin:0">เรียนรู้วิถีชุมชน ภูมิปัญญาท้องถิ่น และหลักปรัชญาของเศรษฐกิจพอเพียง</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="news" style="background:#fff;border-radius:var(--r-lg)">
+  <div class="container">
+    <div class="sec-head"><span class="eyebrow">ข่าวประชาสัมพันธ์</span><h2>ข่าวสารและกิจกรรม</h2><p class="muted">ติดตามความเคลื่อนไหวของโรงเรียน</p></div>
+    <div class="grid g3" id="newsList"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+</section>
+
+<section id="staff">
+  <div class="container">
+    <div class="sec-head"><span class="eyebrow">บุคลากร</span><h2>คณะครูและบุคลากร</h2></div>
+    <div class="grid g4" id="staffList"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="cta">
+      <div style="flex:1;min-width:240px">
+        <h2>ระบบลงเวลาปฏิบัติราชการ</h2>
+        <p style="margin:0;opacity:.9">สแกนใบหน้าพร้อมตรวจตำแหน่ง GPS ลงเวลาได้เฉพาะในบริเวณโรงเรียน ขอลาออนไลน์ และออกรายงานเป็นไฟล์ Word</p>
+      </div>
+      <a class="btn btn-gold btn-lg" href="checkin.html">เข้าสู่ระบบลงเวลา</a>
+      <a class="btn btn-ghost btn-lg" href="admin.html">สำหรับผู้บริหาร</a>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="container grid g2" style="gap:32px">
+    <div>
+      <span class="eyebrow">ติดต่อเรา</span>
+      <h2 data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</h2>
+      <p class="muted" data-s="address"></p>
+      <div class="grid" style="gap:10px;margin-top:16px" id="contactList"></div>
+    </div>
+    <div id="mapBox"><div class="card empty">ยังไม่ได้ตั้งค่าพิกัดโรงเรียน</div></div>
+  </div>
+</section>
+
+<footer>
+  <div class="container grid g3">
+    <div><h4 data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</h4><p class="small" data-s="address"></p></div>
+    <div><h4>ลิงก์ด่วน</h4><p class="small"><a href="checkin.html">ลงเวลาปฏิบัติราชการ</a><br><a href="checkin.html#leave">ขอลา / ไปราชการ</a><br><a href="admin.html">ระบบผู้บริหาร</a></p></div>
+    <div><h4>ผู้อำนวยการ</h4><p class="small"><span data-s="directorName"></span><br><span data-s="directorTitle"></span></p></div>
+  </div>
+  <div class="container small" style="border-top:1px solid rgba(255,255,255,.12);margin-top:24px;padding-top:18px;text-align:center">© <span id="year"></span> <span data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</span></div>
+</footer>
+
+<div id="newsModal" class="modal-bg hidden" onclick="if(event.target===this)this.classList.add('hidden')"><div class="modal" id="newsModalBody"></div></div>
+
+<script src="assets/config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/api.js"></script>
+<script>
+(function () {
+  if (U.DEMO) document.getElementById('demoBar').classList.remove('hidden');
+  document.getElementById('year').textContent = new Date().getFullYear() + 543;
+
+  function tick() {
+    var n = new Date();
+    document.getElementById('clock').textContent = n.toLocaleTimeString('th-TH', { hour12: false });
+    document.getElementById('clockDate').textContent = n.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  tick(); setInterval(tick, 1000);
+
+  var NEWS = [];
+  API.call('getPublic').then(function (d) {
+    var s = d.settings, logo = s.logoUrl || U.defaultLogo;
+    document.querySelectorAll('[data-s]').forEach(function (el) { var v = s[el.dataset.s]; if (v) el.textContent = v; });
+    document.getElementById('heroName').textContent = s.schoolName.replace(/^โรงเรียน/, '');
+    ['navLogo', 'heroLogo'].forEach(function (id) { document.getElementById(id).src = logo; });
+    document.getElementById('favicon').href = logo;
+    if (s.heroImage) document.getElementById('heroBg').style.backgroundImage = 'url("' + s.heroImage + '")';
+    document.getElementById('stTeachers').textContent = d.staff.length;
+    document.getElementById('stStudents').textContent = s.studentsCount || '-';
+    document.getElementById('stClasses').textContent = s.classesCount || '-';
+
+    NEWS = d.news;
+    document.getElementById('newsList').innerHTML = d.news.length ? d.news.slice(0, 9).map(function (n, i) {
+      return '<article class="card news-card" data-i="' + i + '"><div class="news-img">' +
+        (n.image ? '<img loading="lazy" src="' + U.esc(n.image) + '" alt="">' : '<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12v16H6a2 2 0 0 1-2-2zM16 8h4v10a2 2 0 0 1-2 2M8 8h4M8 12h4M8 16h4"/></svg>') +
+        '</div><div class="news-body"><span class="badge">' + (String(n.pinned) === 'true' ? 'ปักหมุด · ' : '') + U.thaiDate(n.date, true) + '</span><h3>' + U.esc(n.title) + '</h3><p>' + U.esc(n.body) + '</p></div></article>';
+    }).join('') : '<div class="empty card">ยังไม่มีข่าวประชาสัมพันธ์</div>';
+
+    document.getElementById('staffList').innerHTML = d.staff.length ? d.staff.map(function (t) {
+      var av = t.photo ? '<img class="avatar" src="' + U.esc(t.photo) + '" alt="">' : '<div class="avatar">' + U.esc(t.name.replace(/^(นาย|นางสาว|นาง|ว่าที่.*?\s)/, '').charAt(0)) + '</div>';
+      return '<div class="card staff">' + av + '<b>' + U.esc(t.name) + '</b><span class="muted small">' + U.esc(t.position) + '</span></div>';
+    }).join('') : '<div class="empty card">ยังไม่มีข้อมูลบุคลากร</div>';
+
+    var contacts = [];
+    if (s.phone) contacts.push(['โทรศัพท์', '<a href="tel:' + U.esc(s.phone) + '">' + U.esc(s.phone) + '</a>']);
+    if (s.email) contacts.push(['อีเมล', '<a href="mailto:' + U.esc(s.email) + '">' + U.esc(s.email) + '</a>']);
+    if (s.facebook) contacts.push(['Facebook', '<a target="_blank" rel="noopener" href="' + U.esc(s.facebook) + '">เพจโรงเรียน</a>']);
+    document.getElementById('contactList').innerHTML = contacts.map(function (c) { return '<div class="card" style="padding:14px 18px"><span class="muted small">' + c[0] + '</span><br>' + c[1] + '</div>'; }).join('');
+    if (s.lat && s.lng) document.getElementById('mapBox').innerHTML = '<iframe class="map" loading="lazy" title="แผนที่โรงเรียน" src="https://maps.google.com/maps?q=' + encodeURIComponent(s.lat + ',' + s.lng) + '&z=16&output=embed"></iframe>';
+  }).catch(function (e) { U.toast(e.message, 'bad'); });
+
+  API.call('todayBoard').then(function (b) { document.getElementById('stToday').textContent = b.rows.filter(function (r) { return r.timeIn; }).length + '/' + b.total; }).catch(function () {});
+
+  document.getElementById('newsList').addEventListener('click', function (e) {
+    var card = e.target.closest('.news-card'); if (!card) return;
+    var n = NEWS[card.dataset.i];
+    document.getElementById('newsModalBody').innerHTML = (n.image ? '<img src="' + U.esc(n.image) + '" style="border-radius:16px;margin-bottom:16px" alt="">' : '') +
+      '<span class="badge">' + U.thaiDate(n.date) + '</span><h2 style="margin-top:10px">' + U.esc(n.title) + '</h2><p style="white-space:pre-line">' + U.esc(n.body) + '</p>' +
+      '<button class="btn" onclick="document.getElementById(\'newsModal\').classList.add(\'hidden\')">ปิด</button>';
+    document.getElementById('newsModal').classList.remove('hidden');
+  });
+})();
+</script>
+</body>
+</html>

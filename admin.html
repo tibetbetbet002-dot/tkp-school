@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ระบบผู้บริหาร</title>
+<meta name="theme-color" content="#4c1f7e">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" id="favicon">
+</head>
+<body class="app-bg">
+<div id="demoBar" class="demo-bar hidden">โหมดทดลอง — รหัสผ่านผู้ดูแลคือ <b>admin1234</b> · ข้อมูลเก็บในเครื่องนี้เท่านั้น · <a onclick="confirm('ล้างข้อมูลทดลองทั้งหมดและเริ่มใหม่?')&&U.demoReset()">ล้างข้อมูลทดลอง</a></div>
+<nav class="nav">
+  <div class="container nav-in">
+    <a class="brand" href="index.html"><img id="navLogo" alt=""><div><b data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</b><small>ระบบผู้บริหาร / ผู้ดูแล</small></div></a>
+    <div class="spacer"></div>
+    <a class="btn btn-sm" href="checkin.html">หน้าลงเวลา</a>
+    <button class="btn btn-sm hidden" id="logoutBtn">ออกจากระบบ</button>
+  </div>
+</nav>
+
+<!-- เข้าสู่ระบบ -->
+<div id="loginView" class="container" style="max-width:420px;padding:60px 0">
+  <form class="card card-lg center" id="loginForm">
+    <img id="loginLogo" style="width:84px;height:84px;border-radius:50%;margin:0 auto 14px" alt="">
+    <h2>เข้าสู่ระบบผู้ดูแล</h2>
+    <p class="muted small">สำหรับผู้บริหารและเจ้าหน้าที่ที่ได้รับมอบหมาย</p>
+    <div class="field" style="text-align:left"><label>รหัสผ่าน</label><input type="password" name="password" required autocomplete="current-password"></div>
+    <button class="btn btn-primary btn-block btn-lg">เข้าสู่ระบบ</button>
+  </form>
+</div>
+
+<!-- แอปผู้ดูแล -->
+<div id="appView" class="container side-layout hidden">
+  <aside class="side" id="side">
+    <button data-view="dash" class="active">📊 แดชบอร์ด</button>
+    <button data-view="daily">🕘 การลงเวลา</button>
+    <button data-view="teachers">👩‍🏫 ครูและใบหน้า</button>
+    <button data-view="leaves">📝 คำขอลา <span class="count hidden" id="leaveCount"></span></button>
+    <button data-view="reports">📄 รายงาน Word</button>
+    <button data-view="news">📰 ข่าวสาร</button>
+    <button data-view="settings">⚙️ ตั้งค่า</button>
+  </aside>
+  <main id="view" style="min-width:0"></main>
+</div>
+
+<div id="modal" class="modal-bg hidden"><div class="modal" id="modalBody"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/dist/face-api.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/face.js"></script>
+<script src="assets/report.js"></script>
+<script src="assets/admin.js"></script>
+</body>
+</html>

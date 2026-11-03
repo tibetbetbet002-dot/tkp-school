@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ลงเวลาปฏิบัติราชการ</title>
+<meta name="theme-color" content="#4c1f7e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" id="favicon">
+</head>
+<body class="app-bg">
+<div id="demoBar" class="demo-bar hidden">โหมดทดลอง — ข้อมูลเก็บในเครื่องนี้เท่านั้น · ลงทะเบียนใบหน้าได้ที่ <a href="admin.html">หน้าผู้ดูแล</a> (รหัส admin1234)</div>
+<nav class="nav">
+  <div class="container nav-in">
+    <a class="brand" href="index.html"><img id="navLogo" alt=""><div><b data-s="schoolName">โรงเรียนบ้านทุ่งข้าวพวง</b><small>ระบบลงเวลาปฏิบัติราชการ</small></div></a>
+    <div class="spacer"></div>
+    <a class="btn btn-sm" href="index.html">หน้าหลัก</a>
+  </div>
+</nav>
+
+<main class="container" style="max-width:760px;padding-bottom:60px">
+  <div class="page-head center">
+    <h1 style="font-size:1.7rem;margin-bottom:2px">ลงเวลาปฏิบัติราชการ</h1>
+    <div class="muted" id="nowText"></div>
+  </div>
+
+  <div class="tabs" id="tabs" style="margin:16px 0 22px">
+    <button data-tab="scan" class="active">สแกนลงเวลา</button>
+    <button data-tab="leave">ขอลา / ไปราชการ</button>
+    <button data-tab="history">ประวัติของฉัน</button>
+  </div>
+
+  <!-- ===== สแกนลงเวลา ===== -->
+  <div data-panel="scan">
+    <div id="demoGps" class="card hidden" style="margin-bottom:14px;background:var(--gold-100);border-color:#f2dc94">
+      <b>โหมดทดลอง:</b> ยังไม่ได้ตั้งพิกัดโรงเรียน กดปุ่มด้านล่างเพื่อใช้ตำแหน่งปัจจุบันเป็นจุดศูนย์กลางโรงเรียน
+      <div style="margin-top:10px"><button class="btn btn-sm btn-primary" id="demoSetLoc">ตั้งตำแหน่งนี้เป็นโรงเรียน</button></div>
+    </div>
+
+    <div class="gps" id="gpsBox" style="margin-bottom:14px">
+      <span class="dot"></span>
+      <div style="flex:1"><b id="gpsTitle">กำลังตรวจสอบตำแหน่ง...</b><div class="small muted" id="gpsSub">ต้องอยู่ในบริเวณโรงเรียนจึงจะลงเวลาได้</div></div>
+      <button class="btn btn-sm" id="gpsRefresh">รีเฟรช</button>
+    </div>
+
+    <div class="center" style="margin-bottom:14px">
+      <div class="seg" id="modeSeg"><button data-mode="in">ลงเวลามา</button><button data-mode="out">ลงเวลากลับ</button></div>
+    </div>
+
+    <div id="scanArea">
+      <div class="scanner" id="scanner">
+        <video id="video" playsinline muted></video>
+        <div class="frame" id="frame"></div>
+        <div class="scan-line"></div>
+        <div class="placeholder" id="placeholder">
+          <div>
+            <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 17c1-2 3-3 5-3s4 1 5 3"/></svg>
+            <p style="margin:10px 0 0;font-family:var(--font-head)">กดปุ่มด้านล่างเพื่อเริ่มสแกนใบหน้า</p>
+          </div>
+        </div>
+        <div class="msg hidden" id="scanMsg"></div>
+      </div>
+      <div class="center" style="margin-top:18px">
+        <button class="btn btn-primary btn-lg" id="startBtn" style="min-width:240px">เริ่มสแกนใบหน้า</button>
+        <button class="btn hidden" id="cancelBtn">ยกเลิก</button>
+      </div>
+    </div>
+
+    <div id="resultArea" class="card card-lg hidden" style="max-width:440px;margin:0 auto"></div>
+
+    <div class="card" style="margin-top:26px">
+      <div class="row" style="margin-bottom:10px"><h3 style="margin:0">ลงเวลาวันนี้</h3><span class="spacer"></span><span class="badge" id="boardCount">-</span></div>
+      <div id="board"><div class="empty"><span class="spinner"></span></div></div>
+    </div>
+  </div>
+
+  <!-- ===== ขอลา ===== -->
+  <div data-panel="leave" class="hidden">
+    <form class="card card-lg" id="leaveForm">
+      <h3>แบบขอลา / ขออนุญาตไปราชการ</h3>
+      <p class="muted small">ระบบจะส่งคำขอถึงผู้บริหารเพื่อพิจารณาอนุมัติ</p>
+      <div class="grid g2" style="gap:0 16px">
+        <div class="field"><label>ชื่อ-สกุล</label><select name="teacherId" class="teacherSel" required></select></div>
+        <div class="field"><label>รหัส PIN</label><input name="pin" type="password" inputmode="numeric" maxlength="8" required placeholder="PIN 4 หลัก"></div>
+        <div class="field"><label>ประเภท</label><select name="type" id="leaveType"></select></div>
+        <div></div>
+        <div class="field"><label>ตั้งแต่วันที่</label><input name="from" type="date" required></div>
+        <div class="field"><label>ถึงวันที่</label><input name="to" type="date" required></div>
+      </div>
+      <div class="field"><label>เหตุผล / รายละเอียด</label><textarea name="reason" placeholder="เช่น ป่วยเป็นไข้ / เข้าร่วมอบรม ณ สำนักงานเขตพื้นที่ฯ"></textarea></div>
+      <button class="btn btn-primary btn-lg btn-block">ส่งคำขอ</button>
+    </form>
+  </div>
+
+  <!-- ===== ประวัติ ===== -->
+  <div data-panel="history" class="hidden">
+    <form class="card" id="histForm">
+      <div class="grid g3" style="gap:0 14px;align-items:end">
+        <div class="field"><label>ชื่อ-สกุล</label><select name="teacherId" class="teacherSel" required></select></div>
+        <div class="field"><label>รหัส PIN</label><input name="pin" type="password" inputmode="numeric" maxlength="8" required></div>
+        <div class="field"><label>เดือน</label><input name="month" type="month" required></div>
+      </div>
+      <button class="btn btn-primary btn-block">ดูประวัติ</button>
+    </form>
+    <div id="histOut" style="margin-top:18px"></div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/dist/face-api.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/face.js"></script>
+<script src="assets/report.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var PUB = null, POS = null, MODE = new Date().getHours() < 12 ? 'in' : 'out', cancelled = false, resetTimer = null;
+  if (U.DEMO) { $('demoBar').classList.remove('hidden'); window.addEventListener('demo-line', function (e) { U.toast('LINE (จำลอง)\n' + e.detail, 'line'); }); }
+
+  setInterval(function () { $('nowText').textContent = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + new Date().toLocaleTimeString('th-TH', { hour12: false }) + ' น.'; }, 1000);
+
+  // แท็บ
+  function showTab(name) {
+    document.querySelectorAll('#tabs button').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === name); });
+    document.querySelectorAll('[data-panel]').forEach(function (p) { p.classList.toggle('hidden', p.dataset.panel !== name); });
+    if (name !== 'scan') stopScan();
+  }
+  $('tabs').onclick = function (e) { if (e.target.dataset.tab) { showTab(e.target.dataset.tab); history.replaceState(null, '', '#' + e.target.dataset.tab); } };
+  if (location.hash && document.querySelector('[data-tab="' + location.hash.slice(1) + '"]')) showTab(location.hash.slice(1));
+
+  // โหมด มา / กลับ
+  function setMode(m) { MODE = m; document.querySelectorAll('#modeSeg button').forEach(function (b) { b.classList.toggle('active', b.dataset.mode === m); }); }
+  $('modeSeg').onclick = function (e) { if (e.target.dataset.mode) setMode(e.target.dataset.mode); };
+  setMode(MODE);
+
+  // ข้อมูลโรงเรียน
+  function loadPublic() {
+    return API.call('getPublic').then(function (d) {
+      PUB = d;
+      var logo = d.settings.logoUrl || U.defaultLogo;
+      $('navLogo').src = logo; $('favicon').href = logo;
+      document.querySelectorAll('[data-s]').forEach(function (el) { el.textContent = d.settings[el.dataset.s] || el.textContent; });
+      var opts = '<option value="">— เลือกชื่อ —</option>' + d.staff.map(function (t) { return '<option value="' + U.esc(t.id) + '">' + U.esc(t.name) + '</option>'; }).join('');
+      document.querySelectorAll('.teacherSel').forEach(function (s) { s.innerHTML = opts; });
+      $('leaveType').innerHTML = d.leaveTypes.map(function (t) { return '<option>' + t + '</option>'; }).join('');
+      $('demoGps').classList.toggle('hidden', !(U.DEMO && !d.settings.lat));
+      checkGps().catch(function () { });
+    });
+  }
+
+  // GPS
+  function setGps(state, title, sub) { $('gpsBox').className = 'gps ' + state; $('gpsTitle').textContent = title; $('gpsSub').textContent = sub; }
+  function checkGps() {
+    setGps('', 'กำลังตรวจสอบตำแหน่ง...', 'ต้องอยู่ในบริเวณโรงเรียนจึงจะลงเวลาได้');
+    return U.getPosition().then(function (p) {
+      POS = p;
+      var s = PUB && PUB.settings;
+      if (!s || !s.lat) { setGps('bad', 'ยังไม่ได้ตั้งพิกัดโรงเรียน', 'ติดต่อผู้ดูแลระบบ'); return p; }
+      var d = U.distance(p.lat, p.lng, +s.lat, +s.lng), inside = d <= +s.radius;
+      setGps(inside ? 'ok' : 'bad', inside ? 'อยู่ในบริเวณโรงเรียน ✓' : 'อยู่นอกบริเวณโรงเรียน',
+        'ห่างจุดศูนย์กลาง ' + Math.round(d) + ' ม. (อนุญาต ' + s.radius + ' ม.) · ความแม่นยำ ±' + Math.round(p.accuracy) + ' ม.');
+      return p;
+    }).catch(function (e) { POS = null; setGps('bad', 'ไม่สามารถระบุตำแหน่ง', e.message); throw e; });
+  }
+  $('gpsRefresh').onclick = function () { checkGps().catch(function () {}); };
+  $('demoSetLoc').onclick = function () {
+    U.getPosition().then(function (p) {
+      return API.call('settingsSave', { password: 'admin1234', settings: { lat: p.lat.toFixed(6), lng: p.lng.toFixed(6) } });
+    }).then(function () { U.toast('ตั้งพิกัดโรงเรียนแล้ว', 'ok'); return loadPublic(); }).catch(function (e) { U.toast(e.message, 'bad'); });
+  };
+
+  // สแกน
+  function msg(text, ok) { var m = $('scanMsg'); m.classList.remove('hidden'); m.textContent = text; $('frame').classList.toggle('ok', !!ok); }
+  function stopScan() {
+    cancelled = true; Face.stop();
+    $('scanner').classList.remove('scanning'); $('placeholder').classList.remove('hidden'); $('scanMsg').classList.add('hidden'); $('frame').classList.remove('ok');
+    $('startBtn').classList.remove('hidden'); $('startBtn').disabled = false; $('cancelBtn').classList.add('hidden');
+  }
+  $('cancelBtn').onclick = stopScan;
+  $('startBtn').onclick = async function () {
+    cancelled = false;
+    $('startBtn').disabled = true; $('startBtn').textContent = 'กำลังเตรียมระบบ...';
+    try {
+      var posP = checkGps(); posP.catch(function () { });
+      await Face.load();
+      $('placeholder').classList.add('hidden');
+      await Face.start($('video'));
+      $('startBtn').classList.add('hidden'); $('startBtn').textContent = 'เริ่มสแกนใบหน้า'; $('cancelBtn').classList.remove('hidden');
+      $('scanner').classList.add('scanning');
+      var face = await Face.scan($('video'), { liveness: PUB.settings.liveness === 'on', onStatus: msg, isCancelled: function () { return cancelled; } });
+      msg('กำลังตรวจสอบตำแหน่งและข้อมูล...', true);
+      var pos = await posP;
+      Face.stop();
+      var r = await API.call('checkin', { descriptor: face.descriptor, photo: face.photo, lat: pos.lat, lng: pos.lng, accuracy: pos.accuracy, mode: MODE });
+      showResult(true, r, face.photo);
+    } catch (e) {
+      if (e.message === 'ยกเลิก') return;
+      showResult(false, e);
+    } finally {
+      $('startBtn').textContent = 'เริ่มสแกนใบหน้า';
+      if (!cancelled) stopScan();
+      loadBoard();
+    }
+  };
+
+  function showResult(ok, r, photo) {
+    $('scanArea').classList.add('hidden');
+    var box = $('resultArea'); box.classList.remove('hidden');
+    if (ok) {
+      var cls = r.status === 'สาย' || r.status === 'กลับก่อนเวลา' ? 'b-late' : 'b-ok';
+      var title = r.already ? 'ลงเวลามาไว้แล้ว' : (r.mode === 'in' ? 'ลงเวลามาสำเร็จ' : 'ลงเวลากลับสำเร็จ');
+      box.className = 'card card-lg result ok';
+      box.innerHTML = (photo ? '<img src="' + photo + '" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin:0 auto 12px;border:4px solid var(--ok-bg);transform:scaleX(-1)">' : '<div class="big">✓</div>') +
+        '<h2 style="margin-bottom:2px">' + U.esc(r.name) + '</h2><div class="muted">' + U.esc(r.position || '') + '</div>' +
+        '<div style="font:600 2.6rem var(--font-head);color:var(--purple-700);margin:12px 0 4px">' + U.hm(r.time) + ' น.</div>' +
+        '<div class="row" style="justify-content:center"><span class="badge ' + cls + '">' + title + ' · ' + U.esc(r.status || '') + '</span></div>' +
+        '<p class="small muted" style="margin:12px 0 18px">ห่างจุดศูนย์กลางโรงเรียน ' + r.distance + ' ม. · ความตรงกันของใบหน้า ' + r.score + '%' + (r.missingIn ? '<br><b style="color:var(--warn)">วันนี้ยังไม่ได้ลงเวลามา กรุณาแจ้งผู้ดูแล</b>' : '') + '</p>' +
+        '<button class="btn btn-primary" id="againBtn">เสร็จสิ้น</button>';
+    } else {
+      box.className = 'card card-lg result bad';
+      box.innerHTML = '<div class="big">!</div><h2>ลงเวลาไม่สำเร็จ</h2><p class="muted">' + U.esc(r.message) + '</p><button class="btn btn-primary" id="againBtn">ลองอีกครั้ง</button>';
+    }
+    $('againBtn').onclick = resetScan;
+    clearTimeout(resetTimer); resetTimer = setTimeout(resetScan, ok ? 10000 : 20000);
+  }
+  function resetScan() { clearTimeout(resetTimer); $('resultArea').classList.add('hidden'); $('scanArea').classList.remove('hidden'); }
+
+  function loadBoard() {
+    API.call('todayBoard').then(function (b) {
+      $('boardCount').textContent = b.rows.filter(function (r) { return r.timeIn; }).length + '/' + b.total + ' คน';
+      $('board').innerHTML = b.rows.length ? '<div class="table-wrap" style="border:0"><table><thead><tr><th>ชื่อ</th><th>มา</th><th>กลับ</th><th>สถานะ</th></tr></thead><tbody>' +
+        b.rows.map(function (r) { return '<tr><td>' + U.esc(r.name) + '</td><td>' + U.hm(r.timeIn) + '</td><td>' + U.hm(r.timeOut) + '</td><td>' + (r.status ? '<span class="badge ' + (r.status === 'สาย' ? 'b-late' : 'b-ok') + '">' + r.status + '</span>' : '') + '</td></tr>'; }).join('') +
+        '</tbody></table></div>' : '<div class="empty">ยังไม่มีการลงเวลาวันนี้</div>';
+    }).catch(function () {});
+  }
+
+  // ขอลา
+  var today = U.todayStr();
+  $('leaveForm').from.value = $('leaveForm').to.value = today;
+  $('leaveForm').from.onchange = function () { if ($('leaveForm').to.value < this.value) $('leaveForm').to.value = this.value; };
+  $('leaveForm').onsubmit = function (e) {
+    e.preventDefault();
+    var f = e.target, btn = f.querySelector('button'); btn.disabled = true;
+    API.call('leaveRequest', { teacherId: f.teacherId.value, pin: f.pin.value, type: f.type.value, from: f.from.value, to: f.to.value, reason: f.reason.value })
+      .then(function (r) { U.toast('ส่งคำขอ' + r.type + ' (' + r.days + ' วันทำการ) เรียบร้อย รอผู้บริหารอนุมัติ', 'ok'); f.reason.value = ''; f.pin.value = ''; })
+      .catch(function (e) { U.toast(e.message, 'bad'); }).finally(function () { btn.disabled = false; });
+  };
+
+  // ประวัติ
+  $('histForm').month.value = today.slice(0, 7);
+  var lastHist = null;
+  $('histForm').onsubmit = function (e) {
+    e.preventDefault();
+    var f = e.target;
+    $('histOut').innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+    API.call('teacherHistory', { teacherId: f.teacherId.value, pin: f.pin.value, month: f.month.value }).then(function (h) {
+      lastHist = h;
+      var c = h.summary ? h.summary.count : {};
+      var kpi = function (n, l, bg, fg) { return '<div class="card kpi"><div class="ic" style="background:' + bg + ';color:' + fg + '">' + n + '</div><div class="l">' + l + '</div></div>'; };
+      var cal = '<div class="cal">' + ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map(function (d) { return '<div class="h">' + d + '</div>'; }).join('');
+      var first = new Date(h.month + '-01T00:00:00').getDay();
+      for (var i = 0; i < first; i++) cal += '<div></div>';
+      var colors = { present: 'var(--ok-bg);color:var(--ok)', late: 'var(--warn-bg);color:var(--warn)', absent: 'var(--bad-bg);color:var(--bad)', leave: 'var(--info-bg);color:var(--info)', official: 'var(--info-bg);color:var(--info)', off: '#f3f0f6;color:#b3a9bd', future: '#fff;color:#b3a9bd', waiting: '#fff;color:var(--muted)' };
+      (h.summary ? h.summary.days : []).forEach(function (d) { cal += '<div title="' + U.esc(d.label + ' ' + (d.timeIn ? U.hm(d.timeIn) + '-' + U.hm(d.timeOut) : '')) + '" style="background:' + colors[d.status] + '">' + (+d.date.slice(8)) + '</div>'; });
+      cal += '</div>';
+      $('histOut').innerHTML =
+        '<div class="grid g4" style="gap:12px">' + kpi(c.present || 0, 'วันมาปฏิบัติงาน', 'var(--ok-bg)', 'var(--ok)') + kpi(c.late || 0, 'มาสาย', 'var(--warn-bg)', 'var(--warn)') +
+        kpi((c.sick || 0) + (c.personal || 0) + (c.otherLeave || 0), 'วันลา', 'var(--info-bg)', 'var(--info)') + kpi(c.absent || 0, 'ขาด', 'var(--bad-bg)', 'var(--bad)') + '</div>' +
+        '<div class="card" style="margin-top:14px"><div class="row" style="margin-bottom:12px"><h3 style="margin:0">ปฏิทิน ' + U.thaiMonth(h.month) + '</h3><span class="spacer"></span><button class="btn btn-sm btn-gold" id="myReport">ดาวน์โหลดรายงาน Word</button></div>' + cal + '</div>' +
+        '<div class="card" style="margin-top:14px"><h3>คำขอลาของฉัน</h3>' + (h.leaves.length ? h.leaves.map(function (l) {
+          var cls = l.status === 'อนุมัติ' ? 'b-ok' : l.status === 'ไม่อนุมัติ' ? 'b-bad' : 'b-warn';
+          return '<div class="row" style="padding:10px 0;border-top:1px solid var(--line)"><div><b>' + U.esc(l.type) + '</b> <span class="muted small">' + U.thaiDate(l.from, true) + (l.to !== l.from ? ' – ' + U.thaiDate(l.to, true) : '') + ' (' + l.days + ' วัน)</span><div class="small muted">' + U.esc(l.reason) + '</div></div><span class="spacer"></span><span class="badge ' + cls + '">' + l.status + '</span></div>';
+        }).join('') : '<div class="empty">ยังไม่มีคำขอลา</div>') + '</div>';
+      $('myReport').onclick = function () { Report.person(PUB.settings, lastHist.summary, lastHist.month).catch(function (e) { U.toast(e.message, 'bad'); }); };
+    }).catch(function (e) { $('histOut').innerHTML = ''; U.toast(e.message, 'bad'); });
+  };
+
+  loadPublic().catch(function (e) { U.toast(e.message, 'bad'); });
+  loadBoard(); setInterval(loadBoard, 60000);
+})();
+</script>
+</body>
+</html>
