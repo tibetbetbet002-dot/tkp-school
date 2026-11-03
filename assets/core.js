@@ -26,11 +26,11 @@ var CORE_DEFAULT_SETTINGS = {
   mapUrl: 'https://maps.app.goo.gl/VvBob9aD36QCa1oY9',
   oitUrl: 'https://sites.google.com/pracharath.ac.th/tkpsc/',
   announcement: '',
-  directorName: '',
+  directorName: 'นางสาวประภาพร กิติ',
   directorTitle: 'ผู้อำนวยการโรงเรียนบ้านทุ่งข้าวพวง',
-  directorPhoto: '',
+  directorPhoto: 'assets/photos/director.jpg',
   directorMessage: '',
-  studentsCount: '',
+  studentsCount: '423',
   classesCount: '8',
   founded: '',
   logoUrl: '',
@@ -199,9 +199,54 @@ function createCore(db, env) {
       fail('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'AUTH');
     }
     if (Number(u.failCount) || Number(u.lockUntil)) { u.failCount = 0; u.lockUntil = ''; db.put('admins', 'id', u); }
-    return { id: u.id, username: u.username, name: u.name, role: u.role === 'editor' ? 'editor' : 'admin', mustChange: String(u.mustChange) === 'true' };
+    return { id: u.id, username: u.username, name: u.name, email: u.email || '', role: u.role === 'editor' ? 'editor' : 'admin', mustChange: String(u.mustChange) === 'true' };
   }
-  var EDITOR_ACTIONS = { adminLogin: 1, myPasswordChange: 1, settingsGet: 1, settingsSave: 1, newsSave: 1, newsDelete: 1,
+  function checkEmail(email) {
+    email = String(email || '').trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fail('รูปแบบอีเมลไม่ถูกต้อง: ' + email);
+  }
+
+  // ---------- ลืมรหัสผ่าน: ส่งรหัสยืนยันทางอีเมลที่ผูกกับบัญชี ----------
+  var RESET_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function forgotPassword(req) {
+    var key = String(req.username || '').trim().toLowerCase(), now = env.now().getTime();
+    var generic = { ok: true, message: 'ถ้าข้อมูลถูกต้อง ระบบได้ส่งรหัสยืนยันไปที่อีเมลของบัญชีแล้ว (หมดอายุใน 30 นาที)' };
+    if (!key) fail('กรุณากรอกชื่อผู้ใช้หรืออีเมล');
+    var u = admins().filter(function (a) { return String(a.username).toLowerCase() === key || String(a.email || '').toLowerCase() === key; })[0];
+    // ไม่บอกว่าบัญชีมีอยู่จริงหรือไม่ เพื่อไม่ให้คนนอกใช้เดาชื่อผู้ใช้
+    if (!u || !u.email || String(u.active) === 'false') return generic;
+    if (Number(u.resetExpire) - 28 * 60000 > now) return generic; // ขอซ้ำได้ทุก 2 นาที
+    if (!env.sendMail) fail('ระบบส่งอีเมลยังไม่พร้อม กรุณาติดต่อผู้ดูแลระบบคนอื่นให้รีเซ็ตรหัสให้');
+    var code = '';
+    for (var i = 0; i < 8; i++) code += RESET_CHARS.charAt(Math.floor(Math.random() * RESET_CHARS.length));
+    u.resetHash = coreSha256(u.salt + ':reset:' + code);
+    u.resetExpire = now + 30 * 60000;
+    db.put('admins', 'id', u);
+    var name = settings().schoolName;
+    env.sendMail(u.email, 'รหัสรีเซ็ตรหัสผ่าน - ' + name,
+      'สวัสดีคุณ ' + u.name + '\n\nมีการขอรีเซ็ตรหัสผ่านสำหรับบัญชี "' + u.username + '" ของระบบผู้ดูแลเว็บไซต์' + name +
+      '\n\nรหัสยืนยัน: ' + code + '\n(ใช้ได้ภายใน 30 นาที)\n\nนำรหัสนี้ไปกรอกที่หน้า "ลืมรหัสผ่าน" แล้วตั้งรหัสผ่านใหม่\nถ้าคุณไม่ได้ขอรีเซ็ตรหัสผ่าน ไม่ต้องทำอะไร รหัสผ่านเดิมยังใช้ได้ตามปกติ');
+    return generic;
+  }
+  function resetPassword(req) {
+    var u = findAdmin(req.username), now = env.now().getTime();
+    var bad = function () { fail('รหัสยืนยันไม่ถูกต้องหรือหมดอายุ กรุณาขอรหัสใหม่'); };
+    if (!u || !u.resetHash || Number(u.resetExpire) < now) bad();
+    var code = String(req.code || '').trim().toUpperCase();
+    if (coreSha256(u.salt + ':reset:' + code) !== u.resetHash) {
+      u.failCount = (Number(u.failCount) || 0) + 1;
+      if (u.failCount >= 5) { u.resetHash = ''; u.resetExpire = ''; u.failCount = 0; } // เดาผิด 5 ครั้ง รหัสยืนยันใช้ไม่ได้
+      db.put('admins', 'id', u);
+      bad();
+    }
+    checkPasswordRule(req.newPassword);
+    setPassword(u, req.newPassword);
+    u.resetHash = ''; u.resetExpire = ''; u.failCount = 0; u.lockUntil = ''; u.mustChange = 'false';
+    db.put('admins', 'id', u);
+    return { ok: true, username: u.username };
+  }
+
+  var EDITOR_ACTIONS = { adminLogin: 1, myPasswordChange: 1, myEmailSave: 1, settingsGet: 1, settingsSave: 1, newsSave: 1, newsDelete: 1,
     eventSave: 1, eventDelete: 1, linkSave: 1, linkDelete: 1, uploadImage: 1 };
   function requireTeacher(req) {
     var t = db.rows('teachers').filter(function (x) { return String(x.id) === String(req.teacherId); })[0];
@@ -389,6 +434,34 @@ function createCore(db, env) {
   // ---------- ผู้ดูแล ----------
   var admin = {
     adminLogin: function (req, me) { return me; },
+    bootstrapSetup: function (req, me) {
+      // ตั้งค่าครั้งแรก: สร้างหลายบัญชีพร้อมกัน แล้วปิดบัญชีเริ่มต้น admin/admin1234
+      if (!me.bootstrap) fail('ตั้งค่าครั้งแรกไปแล้ว');
+      var list = req.accounts || [], seen = {};
+      if (!list.length) fail('กรุณาเพิ่มอย่างน้อย 1 บัญชี');
+      if (!list.some(function (a) { return a.role !== 'editor'; })) fail('ต้องมีผู้ดูแลระบบอย่างน้อย 1 บัญชี');
+      var items = list.map(function (a) {
+        var username = String(a.username || '').trim();
+        if (!/^[a-zA-Z0-9._-]{3,30}$/.test(username)) fail('ชื่อผู้ใช้ "' + username + '" ใช้ได้เฉพาะ a-z 0-9 . _ - ยาว 3-30 ตัว');
+        if (seen[username.toLowerCase()]) fail('ชื่อผู้ใช้ซ้ำกัน: ' + username);
+        seen[username.toLowerCase()] = 1;
+        checkEmail(a.email);
+        checkPasswordRule(a.password);
+        var item = { id: uid(), username: username, name: a.name || username, role: a.role === 'editor' ? 'editor' : 'admin', email: String(a.email || '').trim(),
+          active: 'true', failCount: 0, lockUntil: '', mustChange: 'false', resetHash: '', resetExpire: '' };
+        setPassword(item, a.password);
+        return item;
+      });
+      items.forEach(function (it) { db.add('admins', it); });
+      var s = db.settings() || {}; s.adminPassword = uid() + uid() + uid(); db.saveSettings(s); // รหัสเริ่มต้นเดิมใช้ไม่ได้อีก
+      return { usernames: items.map(function (i) { return i.username; }) };
+    },
+    myEmailSave: function (req, me) {
+      if (me.bootstrap) fail('กรุณาตั้งค่าครั้งแรกก่อน');
+      checkEmail(req.email);
+      var u = findAdmin(me.username); u.email = String(req.email || '').trim(); db.put('admins', 'id', u);
+      return { ok: true };
+    },
     myPasswordChange: function (req, me) {
       checkPasswordRule(req.newPassword);
       if (me.bootstrap) {
@@ -406,7 +479,7 @@ function createCore(db, env) {
       return { username: u.username };
     },
     usersList: function () {
-      return admins().map(function (a) { return { id: a.id, username: a.username, name: a.name, role: a.role, active: String(a.active) !== 'false', locked: Number(a.lockUntil) > env.now().getTime() }; });
+      return admins().map(function (a) { return { id: a.id, username: a.username, name: a.name, role: a.role, email: a.email || '', active: String(a.active) !== 'false', locked: Number(a.lockUntil) > env.now().getTime() }; });
     },
     userSave: function (req, me) {
       var u = req.user || {}, all = admins();
@@ -416,7 +489,9 @@ function createCore(db, env) {
       if (dup && dup.id !== u.id) fail('ชื่อผู้ใช้นี้มีอยู่แล้ว');
       var old = u.id ? all.filter(function (a) { return a.id === u.id; })[0] : null;
       var item = old || { id: uid(), failCount: 0, lockUntil: '' };
+      checkEmail(u.email);
       item.username = username; item.name = u.name || username; item.role = u.role === 'editor' ? 'editor' : 'admin';
+      item.email = String(u.email || '').trim();
       item.active = u.active === false ? 'false' : 'true';
       if (old && old.id === me.id && (item.role !== 'admin' || item.active === 'false')) fail('ไม่สามารถลดสิทธิ์หรือปิดบัญชีของตัวเองได้');
       // req.password คือรหัสของผู้ที่ล็อกอินอยู่ รหัสของบัญชีที่แก้ใช้ req.userPassword
@@ -446,6 +521,14 @@ function createCore(db, env) {
       var t = req.teacher || {};
       if (!t.name) fail('กรุณากรอกชื่อ');
       var old = t.id ? db.rows('teachers').filter(function (x) { return String(x.id) === String(t.id); })[0] : null;
+      if (req.faces && req.faces.length) {
+        // กันลงทะเบียนหน้าคนเดียวกันซ้ำในชื่อครูคนอื่น
+        var th = Number(settings().faceThreshold);
+        teachers().forEach(function (o) {
+          if (old && String(o.id) === String(old.id)) return;
+          parseFaces(o).forEach(function (f) { if (faceDistance(req.faces[0], f) < th) fail('ใบหน้านี้ตรงกับ ' + o.name + ' ที่ลงทะเบียนไว้แล้ว'); });
+        });
+      }
       var item = {
         id: old ? old.id : uid(), name: t.name, position: t.position || '', pin: String(t.pin || (old && old.pin) || '1234'),
         active: t.active === false ? 'false' : 'true', order: t.order || (old && old.order) || String(db.rows('teachers').length + 1),
@@ -554,21 +637,8 @@ function createCore(db, env) {
     leaveRequest: leaveRequest,
     teacherHistory: teacherHistory,
     verifyPin: function (req) { var t = requireTeacher(req); return { id: t.id, name: t.name }; },
-    teacherEnrollFace: function (req) {
-      // ครูลงทะเบียนใบหน้าเองได้ครั้งแรก (ต้องใช้ PIN) ถ้าจะลงทะเบียนใหม่ต้องให้ผู้ดูแลทำ
-      var t = requireTeacher(req), s = settings();
-      if (parseFaces(t).length) fail('ลงทะเบียนใบหน้าไว้แล้ว หากต้องการลงทะเบียนใหม่ กรุณาติดต่อผู้ดูแลระบบ');
-      var faces = req.faces || [];
-      if (!faces.length || faces[0].length !== 128) fail('ข้อมูลใบหน้าไม่ถูกต้อง');
-      teachers().forEach(function (o) {
-        if (String(o.id) === String(t.id)) return;
-        parseFaces(o).forEach(function (f) { if (faceDistance(faces[0], f) < Number(s.faceThreshold)) fail('ใบหน้านี้ตรงกับ ' + o.name + ' ที่มีในระบบแล้ว'); });
-      });
-      t.faces = JSON.stringify(faces);
-      if (req.photo) t.photo = req.photo;
-      db.put('teachers', 'id', t);
-      return { id: t.id, name: t.name };
-    }
+    forgotPassword: forgotPassword,
+    resetPassword: resetPassword
   };
 
   function handle(req) {
@@ -578,7 +648,7 @@ function createCore(db, env) {
       if (admin[a]) {
         var me = authAdmin(req);
         if (me.role !== 'admin' && !EDITOR_ACTIONS[a]) fail('บัญชีนี้ไม่มีสิทธิ์ใช้งานส่วนนี้', 'ROLE');
-        if (me.mustChange && a !== 'adminLogin' && a !== 'myPasswordChange') fail('กรุณาเปลี่ยนรหัสผ่านก่อนใช้งาน', 'MUST_CHANGE');
+        if (me.mustChange && a !== 'adminLogin' && a !== 'myPasswordChange' && a !== 'bootstrapSetup') fail('กรุณาเปลี่ยนรหัสผ่านก่อนใช้งาน', 'MUST_CHANGE');
         return { ok: true, data: admin[a](req, me) };
       }
       fail('ไม่รู้จักคำสั่ง ' + a);

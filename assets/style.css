@@ -375,3 +375,29 @@ footer a { color: #fff; }
 }
 .side-h { font: 600 .74rem var(--font-head); letter-spacing: .08em; color: var(--muted); padding: 12px 14px 4px; }
 @media (max-width: 900px) { .side-h { display: none; } }
+
+/* ---------- รูปโรงเรียน ---------- */
+.hero-slides { position: absolute; inset: 0; overflow: hidden; }
+.hero-slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.08); transition: opacity 1.8s ease, transform 9s ease-out; }
+.hero-slides img.active { opacity: 1; transform: scale(1); }
+.hero-shade { position: absolute; inset: 0; background: linear-gradient(100deg, rgba(42, 15, 69, .92) 0%, rgba(76, 31, 126, .78) 45%, rgba(94, 42, 150, .45) 100%), radial-gradient(900px 400px at 85% 0, rgba(246, 203, 71, .25), transparent 60%); }
+.hero-side { display: grid; justify-items: center; gap: 18px; }
+.clock-pill { text-align: center; font-family: var(--font-head); color: #fff; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .25); border-radius: 22px; padding: 10px 26px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.clock-pill .t { font-size: 2rem; font-weight: 600; letter-spacing: .03em; line-height: 1.1; }
+.clock-pill .d { font-size: .88rem; opacity: .85; }
+.about-photo { margin: 0; position: relative; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow); aspect-ratio: 16 / 8; }
+.about-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s; }
+.about-photo:hover img { transform: scale(1.05); }
+.about-photo figcaption { position: absolute; left: 14px; bottom: 14px; background: rgba(255, 255, 255, .92); color: var(--purple-800); font-family: var(--font-head); padding: 6px 16px; border-radius: 999px; box-shadow: var(--shadow-sm); }
+.about-photo figcaption b { color: var(--purple-600); font-size: 1.15rem; }
+.staff-photo { margin: 0 auto 26px; max-width: 980px; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lg); border: 6px solid #fff; }
+.staff-photo img { width: 100%; transition: transform .8s; }
+.staff-photo:hover img { transform: scale(1.03); }
+/* เมนูยาวขึ้น: เปลี่ยนเป็นปุ่มเมนูเมื่อจอไม่กว้างพอ */
+.nav-links a { white-space: nowrap; }
+@media (max-width: 1240px) {
+  .site .nav-toggle { display: grid; place-items: center; }
+  .site .nav-links { position: absolute; top: 72px; left: 16px; right: 16px; flex-direction: column; align-items: stretch; background: #fff; border-radius: var(--r); box-shadow: var(--shadow-lg); padding: 10px; display: none; }
+  .site .nav-links.open { display: flex; animation: rise .25s ease; }
+  .site .nav-links a { padding: 12px 16px; }
+}

@@ -35,6 +35,10 @@
       p[id] = dataUrl; store('photos', p); return id;
     },
     getPhoto: function (ref) { return (store('photos') || {})[ref] || ''; },
+    sendMail: function (to, subject, body) {
+      // โหมดทดลอง: แสดงอีเมลบนจอแทนการส่งจริง
+      window.dispatchEvent(new CustomEvent('demo-mail', { detail: { to: to, subject: subject, body: body } }));
+    },
     saveImage: function (dataUrl) { return dataUrl; }
   };
 
@@ -81,7 +85,7 @@
       { id: 'e1', title: 'ประชุมผู้ปกครองนักเรียน (ตัวอย่าง)', date: today, dateEnd: '', time: '09:00 น.', place: 'หอประชุมโรงเรียน', detail: '' }
     ]);
     store('t_links', DEFAULT_LINKS);
-    store('settings', { studentsCount: '120', announcement: 'ยินดีต้อนรับสู่เว็บไซต์โรงเรียนบ้านทุ่งข้าวพวง (ข้อความประกาศตัวอย่าง แก้ไขได้ที่หน้าผู้ดูแล)' });
+    store('settings', { announcement: 'ยินดีต้อนรับสู่เว็บไซต์โรงเรียนบ้านทุ่งข้าวพวง (ข้อความประกาศตัวอย่าง แก้ไขได้ที่หน้าผู้ดูแล)' });
     store('seeded', true);
   }
 

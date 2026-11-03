@@ -61,30 +61,126 @@
   };
   if (USER && PW) api('adminLogin').then(enter).catch(function () { });
 
+  // ---------- รหัสผ่านสุ่มที่แข็งแรง (สร้างในเครื่องนี้ ไม่ส่งไปที่อื่นนอกจากระบบ) ----------
+  function strongPassword(len) {
+    var sets = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnpqrstuvwxyz', '23456789', '!@#$%&*?+='], all = sets.join(''), out = [];
+    var rnd = new Uint32Array(len || 14); crypto.getRandomValues(rnd);
+    for (var i = 0; i < rnd.length; i++) out.push((i < 4 ? sets[i] : all).charAt(rnd[i] % (i < 4 ? sets[i] : all).length));
+    for (var j = out.length - 1; j > 0; j--) { var k = rnd[j] % (j + 1), t = out[j]; out[j] = out[k]; out[k] = t; } // สลับตำแหน่ง
+    return out.join('');
+  }
+
+  // ---------- ตั้งค่าครั้งแรก: สร้าง 3 บัญชีพร้อมรหัสสุ่ม ----------
+  function bootstrapWizard() {
+    var rows = [['director', 'ผู้อำนวยการโรงเรียน', 'admin'], ['officer', 'เจ้าหน้าที่ธุรการ', 'admin'], ['news', 'ครูประชาสัมพันธ์', 'editor']];
+    openModal('<h3>🔒 ตั้งค่าบัญชีผู้ดูแลครั้งแรก</h3><p class="muted small">ระบบสร้างรหัสผ่านสุ่มที่แข็งแรงให้แต่ละบัญชีแล้ว (แก้ไขได้) ใส่อีเมลไว้เพื่อใช้ “ลืมรหัสผ่าน” · หลังกดสร้าง บัญชี admin / admin1234 จะใช้ไม่ได้อีก</p><form id="bsForm">' +
+      rows.map(function (r, i) {
+        return '<div class="card" style="padding:14px;margin-bottom:12px"><b>บัญชีที่ ' + (i + 1) + '</b><div class="grid g2" style="gap:0 12px;margin-top:8px">' +
+          '<div class="field"><label>ชื่อผู้ใช้</label><input name="u' + i + '" value="' + r[0] + '" autocapitalize="none" required></div>' +
+          '<div class="field"><label>ชื่อที่แสดง</label><input name="n' + i + '" value="' + r[1] + '"></div>' +
+          '<div class="field"><label>สิทธิ์</label><select name="r' + i + '"><option value="admin"' + (r[2] === 'admin' ? ' selected' : '') + '>ผู้ดูแลระบบ</option><option value="editor"' + (r[2] === 'editor' ? ' selected' : '') + '>ผู้จัดการเนื้อหาเว็บ</option></select></div>' +
+          '<div class="field"><label>อีเมล (สำหรับลืมรหัสผ่าน)</label><input type="email" name="e' + i + '" placeholder="name@gmail.com"></div>' +
+          '<div class="field" style="grid-column:1/-1"><label>รหัสผ่าน</label><div class="row" style="flex-wrap:nowrap"><input name="p' + i + '" value="' + strongPassword(14) + '" style="font-family:monospace" required><button type="button" class="btn btn-sm" data-regen="' + i + '">สุ่มใหม่</button></div></div>' +
+          '</div><label class="row small" style="font-weight:400"><input type="checkbox" name="x' + i + '"' + (i ? '' : ' disabled') + ' checked> สร้างบัญชีนี้</label></div>';
+      }).join('') +
+      '<div class="row"><span class="spacer"></span><button type="button" class="btn" id="pwLogout">ออกจากระบบ</button><button class="btn btn-primary">สร้างบัญชี</button></div></form>');
+    $('pwLogout').onclick = logout;
+    $('bsForm').querySelectorAll('[data-regen]').forEach(function (b) { b.onclick = function () { $('bsForm')['p' + b.dataset.regen].value = strongPassword(14); }; });
+    $('bsForm').onsubmit = function (e) {
+      e.preventDefault();
+      var f = e.target, accounts = [];
+      rows.forEach(function (r, i) {
+        if (i && !f['x' + i].checked) return;
+        accounts.push({ username: f['u' + i].value.trim(), name: f['n' + i].value.trim(), role: f['r' + i].value, email: f['e' + i].value.trim(), password: f['p' + i].value });
+      });
+      var btn = f.querySelector('.btn-primary'); btn.disabled = true;
+      api('bootstrapSetup', { accounts: accounts }).then(function () {
+        showCredentials(accounts);
+      }).catch(fail).finally(function () { btn.disabled = false; });
+    };
+  }
+  function showCredentials(accounts) {
+    var text = accounts.map(function (a) { return a.name + '\nชื่อผู้ใช้: ' + a.username + '\nรหัสผ่าน: ' + a.password + '\nสิทธิ์: ' + (ADMIN_ROLES[a.role] || a.role); }).join('\n\n');
+    openModal('<h3>✅ สร้างบัญชีเรียบร้อย</h3><p class="muted small"><b style="color:var(--bad)">จดหรือบันทึกรหัสผ่านไว้ตอนนี้</b> ระบบเก็บรหัสแบบเข้ารหัส จะแสดงให้ดูได้ครั้งนี้ครั้งเดียว (เปลี่ยนภายหลังได้ที่ปุ่ม “เปลี่ยนรหัสผ่าน”)</p>' +
+      '<div class="table-wrap" style="margin-bottom:14px"><table><thead><tr><th>ชื่อ</th><th>ชื่อผู้ใช้</th><th>รหัสผ่าน</th></tr></thead><tbody>' +
+      accounts.map(function (a) { return '<tr><td>' + esc(a.name) + '<div class="small muted">' + esc(ADMIN_ROLES[a.role]) + '</div></td><td><b>' + esc(a.username) + '</b></td><td style="font-family:monospace">' + esc(a.password) + '</td></tr>'; }).join('') +
+      '</tbody></table></div><div class="row"><button class="btn" id="credCopy">คัดลอกทั้งหมด</button><button class="btn" id="credPrint">พิมพ์</button><span class="spacer"></span><button class="btn btn-primary" id="credDone">บันทึกแล้ว เข้าใช้งาน</button></div>');
+    $('credCopy').onclick = function () { navigator.clipboard.writeText(text).then(function () { U.toast('คัดลอกแล้ว', 'ok'); }, function () { U.toast('คัดลอกไม่สำเร็จ กรุณาจดเอง', 'bad'); }); };
+    $('credPrint').onclick = function () {
+      var w = window.open('', '_blank');
+      w.document.write('<pre style="font:16px/1.6 sans-serif">บัญชีผู้ดูแลเว็บไซต์โรงเรียน\n\n' + esc(text) + '</pre>'); w.document.close(); w.print();
+    };
+    $('credDone').onclick = function () {
+      USER = accounts[0].username; PW = accounts[0].password; saveSession(); closeModalForce();
+      api('adminLogin').then(enter).catch(fail);
+    };
+  }
+  function closeModalForce() { ME = null; closeModal(); }
+
+  // ---------- ลืมรหัสผ่าน ----------
+  if (U.DEMO) window.addEventListener('demo-mail', function (e) { alert('📧 อีเมลจำลอง (โหมดทดลอง)\nถึง: ' + e.detail.to + '\nเรื่อง: ' + e.detail.subject + '\n\n' + e.detail.body); });
+  $('forgotLink').onclick = function (e) {
+    e.preventDefault();
+    openModal('<h3>ลืมรหัสผ่าน</h3><p class="muted small">กรอกชื่อผู้ใช้หรืออีเมลของบัญชี ระบบจะส่งรหัสยืนยัน 8 หลักไปที่อีเมลที่ผูกไว้</p><form id="fgForm">' +
+      '<div class="field"><label>ชื่อผู้ใช้ หรือ อีเมล</label><input name="username" required autocapitalize="none" value="' + esc($('loginForm').username.value) + '"></div>' +
+      '<div class="row"><a href="#" id="haveCode" class="small">มีรหัสยืนยันแล้ว</a><span class="spacer"></span><button type="button" class="btn" data-close>ยกเลิก</button><button class="btn btn-primary">ส่งรหัสยืนยัน</button></div></form>');
+    $('haveCode').onclick = function (ev) { ev.preventDefault(); resetForm($('fgForm').username.value.trim()); };
+    $('fgForm').onsubmit = function (ev) {
+      ev.preventDefault();
+      var who = ev.target.username.value.trim(), btn = ev.target.querySelector('.btn-primary'); btn.disabled = true;
+      API.call('forgotPassword', { username: who }).then(function (r) { U.toast(r.message, 'ok'); resetForm(who.indexOf('@') > 0 ? '' : who); })
+        .catch(fail).finally(function () { btn.disabled = false; });
+    };
+  };
+  function resetForm(username) {
+    openModal('<h3>ตั้งรหัสผ่านใหม่</h3><p class="muted small">เปิดอีเมลแล้วนำรหัสยืนยัน 8 หลักมากรอก (ถ้าไม่เห็น ให้ดูในโฟลเดอร์จดหมายขยะ/สแปม)</p><form id="rsForm">' +
+      '<div class="field"><label>ชื่อผู้ใช้</label><input name="username" required autocapitalize="none" value="' + esc(username || '') + '"></div>' +
+      '<div class="field"><label>รหัสยืนยันจากอีเมล</label><input name="code" required autocapitalize="characters" maxlength="8" style="font-family:monospace;letter-spacing:.2em;text-transform:uppercase"></div>' +
+      '<div class="field"><label>รหัสผ่านใหม่</label><div class="row" style="flex-wrap:nowrap"><input name="pw1" required autocomplete="new-password" style="font-family:monospace"><button type="button" class="btn btn-sm" id="rsGen">สุ่มให้</button></div><div class="hint">อย่างน้อย 8 ตัว มีทั้งตัวอักษรและตัวเลข</div></div>' +
+      '<div class="row"><span class="spacer"></span><button type="button" class="btn" data-close>ยกเลิก</button><button class="btn btn-primary">บันทึกรหัสผ่านใหม่</button></div></form>');
+    $('rsGen').onclick = function () { $('rsForm').pw1.value = strongPassword(14); };
+    $('rsForm').onsubmit = function (ev) {
+      ev.preventDefault();
+      var f = formData(ev.target);
+      API.call('resetPassword', { username: f.username.trim(), code: f.code, newPassword: f.pw1 }).then(function (r) {
+        closeModal(); U.toast('ตั้งรหัสผ่านใหม่เรียบร้อย เข้าสู่ระบบได้เลย', 'ok');
+        $('loginForm').username.value = r.username; $('loginForm').password.value = ''; $('loginForm').password.focus();
+      }).catch(fail);
+    };
+  }
+
   // เปลี่ยนรหัสผ่าน (บังคับเมื่อเข้าครั้งแรกด้วยบัญชีเริ่มต้น หรือหลังผู้ดูแลรีเซ็ตรหัสให้)
   function changePassword(forced) {
-    var first = ME && ME.username === 'admin' && forced && !ME.id;
+    var first = ME && ME.bootstrap;
+    if (first) { bootstrapWizard(); return; }
     openModal('<h3>' + (forced ? '🔒 ตั้งรหัสผ่านใหม่ก่อนใช้งาน' : 'เปลี่ยนรหัสผ่าน') + '</h3>' +
       (first ? '<p class="muted small">นี่คือการเข้าใช้ครั้งแรกด้วยบัญชีเริ่มต้น กรุณาตั้งชื่อผู้ใช้และรหัสผ่านของคุณเอง รหัสเริ่มต้น admin1234 จะใช้ไม่ได้อีก</p>' : '<p class="muted small">รหัสผ่านต้องยาวอย่างน้อย 8 ตัว และมีทั้งตัวอักษรและตัวเลข</p>') +
       '<form id="pwForm">' +
       (first ? '<div class="field"><label>ชื่อผู้ใช้ใหม่ (ภาษาอังกฤษ/ตัวเลข)</label><input name="newUsername" required value="admin" autocapitalize="none"></div><div class="field"><label>ชื่อที่แสดง</label><input name="name" value="ผู้ดูแลระบบ"></div>' : '') +
-      '<div class="field"><label>รหัสผ่านใหม่</label><input type="password" name="pw1" required autocomplete="new-password" minlength="8"></div>' +
-      '<div class="field"><label>ยืนยันรหัสผ่านใหม่</label><input type="password" name="pw2" required autocomplete="new-password"></div>' +
+      '<div class="field"><label>อีเมลสำหรับกู้คืนรหัสผ่าน</label><input type="email" name="email" value="' + esc((ME && ME.email) || '') + '" placeholder="name@gmail.com"></div>' +
+      '<div class="field"><label>รหัสผ่านใหม่' + (forced ? '' : ' (เว้นว่าง = ไม่เปลี่ยน)') + '</label><div class="row" style="flex-wrap:nowrap"><input type="password" name="pw1"' + (forced ? ' required' : '') + ' autocomplete="new-password"><button type="button" class="btn btn-sm" id="pwGen">สุ่มให้</button></div></div>' +
+      '<div class="field"><label>ยืนยันรหัสผ่านใหม่</label><input type="password" name="pw2" autocomplete="new-password"></div>' +
       '<div class="row"><span class="spacer"></span>' + (forced ? '<button type="button" class="btn" id="pwLogout">ออกจากระบบ</button>' : '<button type="button" class="btn" data-close>ยกเลิก</button>') + '<button class="btn btn-primary">บันทึก</button></div></form>');
     if ($('pwLogout')) $('pwLogout').onclick = logout;
+    $('pwGen').onclick = function () {
+      var p = strongPassword(14), f = $('pwForm');
+      f.pw1.type = f.pw2.type = 'text'; f.pw1.value = f.pw2.value = p;
+      U.toast('สุ่มรหัสให้แล้ว จดไว้ก่อนกดบันทึก');
+    };
     $('pwForm').onsubmit = function (e) {
       e.preventDefault();
-      var f = formData(e.target);
-      if (f.pw1 !== f.pw2) { U.toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', 'bad'); return; }
-      api('myPasswordChange', { newPassword: f.pw1, newUsername: f.newUsername, name: f.name }).then(function (r) {
-        USER = r.username; PW = f.pw1; saveSession(); closeModal();
-        U.toast('บันทึกรหัสผ่านใหม่แล้ว', 'ok');
+      var f = formData(e.target), jobs = Promise.resolve();
+      if (f.pw1 && f.pw1 !== f.pw2) { U.toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', 'bad'); return; }
+      if ((f.email || '') !== ((ME && ME.email) || '')) jobs = jobs.then(function () { return api('myEmailSave', { email: f.email }); });
+      if (f.pw1) jobs = jobs.then(function () { return api('myPasswordChange', { newPassword: f.pw1 }); }).then(function (r) { USER = r.username; PW = f.pw1; saveSession(); });
+      jobs.then(function () {
+        closeModal(); U.toast('บันทึกแล้ว', 'ok');
         return api('adminLogin').then(enter);
       }).catch(fail);
     };
   }
   // ปิดหน้าต่างบังคับเปลี่ยนรหัสไม่ได้
-  $('modal').addEventListener('click', function (e) { if (ME && ME.mustChange && $('pwForm') && e.target === this) e.stopImmediatePropagation(); }, true);
+  $('modal').addEventListener('click', function (e) { if (ME && ME.mustChange && ($('pwForm') || $('bsForm') || $('credDone')) && e.target === this) e.stopImmediatePropagation(); }, true);
 
   function refreshLeaveCount() {
     api('leavesList').then(function (l) {
@@ -205,7 +301,7 @@
   views.teachers = function () {
     api('teachersList').then(function (list) {
       $('view').innerHTML = head('ครูและบุคลากร', '<button class="btn btn-primary" id="tAdd">+ เพิ่มครู</button>') +
-        '<p class="muted small" style="margin-top:-8px">เพิ่มชื่อครูและตั้ง PIN ที่นี่ แล้วให้ครูลงทะเบียนใบหน้าเองบนมือถือที่หน้า <a href="checkin.html#enroll" target="_blank">ลงเวลาครู → ลงทะเบียนใบหน้า</a> (หรือกด “สแกนหน้า” ให้ที่นี่ก็ได้) · หลังลงทะเบียน ระบบจะจำหน้าได้เองและลงเวลาให้อัตโนมัติ</p>' +
+        '<p class="muted small" style="margin-top:-8px">การลงทะเบียนใบหน้าทำได้เฉพาะผู้ดูแลเท่านั้น: เพิ่มครู → กด “สแกนหน้า” ให้ครูคนนั้นมองกล้องที่เครื่องนี้ (ทำครั้งเดียว ~10 วินาที) · หลังจากนั้นระบบจะจำหน้าได้เองและลงเวลาให้อัตโนมัติ · PIN ใช้สำหรับขอลาและดูประวัติ</p>' +
         '<div class="table-wrap"><table><thead><tr><th></th><th>ชื่อ - สกุล</th><th>ตำแหน่ง</th><th>PIN</th><th>ใบหน้า</th><th>สถานะ</th><th></th></tr></thead><tbody>' +
         (list.length ? list.map(function (t) {
           return '<tr><td>' + (t.photo ? '<img src="' + esc(t.photo) + '" style="width:44px;height:44px;border-radius:50%;object-fit:cover">' : '<div class="avatar" style="width:44px;height:44px;font-size:1rem;border-width:2px;margin:0">' + esc(t.name.charAt(0)) + '</div>') + '</td>' +
@@ -536,7 +632,7 @@
       $('view').innerHTML = head('บัญชีผู้ดูแล', '<button class="btn btn-primary" id="uAdd">+ เพิ่มบัญชี</button>') +
         '<p class="muted small" style="margin-top:-8px"><b>ผู้ดูแลระบบ</b> ใช้ได้ทุกเมนู · <b>ผู้จัดการเนื้อหาเว็บ</b> แก้ได้เฉพาะข่าว ปฏิทิน ลิงก์ และข้อมูลหน้าเว็บ (เหมาะกับครูที่ดูแลประชาสัมพันธ์) · บัญชีใหม่ต้องเปลี่ยนรหัสเองเมื่อเข้าใช้ครั้งแรก</p>' +
         (list.length ? '<div class="table-wrap"><table><thead><tr><th>ชื่อผู้ใช้</th><th>ชื่อ</th><th>สิทธิ์</th><th>สถานะ</th><th></th></tr></thead><tbody>' + list.map(function (u) {
-          return '<tr><td><b>' + esc(u.username) + '</b>' + (ME && u.id === ME.id ? ' <span class="badge">คุณ</span>' : '') + '</td><td>' + esc(u.name) + '</td><td>' + esc(ADMIN_ROLES[u.role] || u.role) + '</td>' +
+          return '<tr><td><b>' + esc(u.username) + '</b>' + (ME && u.id === ME.id ? ' <span class="badge">คุณ</span>' : '') + '</td><td>' + esc(u.name) + '<div class="small muted">' + (u.email ? esc(u.email) : '<span style="color:var(--warn)">ยังไม่มีอีเมล (ใช้ลืมรหัสไม่ได้)</span>') + '</div></td><td>' + esc(ADMIN_ROLES[u.role] || u.role) + '</td>' +
             '<td>' + (u.locked ? badge('late', 'ถูกล็อกชั่วคราว') : u.active ? badge('present', 'ใช้งาน') : badge('off', 'ปิดใช้งาน')) + '</td>' +
             '<td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn btn-sm" data-edit="' + esc(u.id) + '">แก้ไข / รีเซ็ตรหัส</button>' + (ME && u.id !== ME.id ? '<button class="btn btn-sm btn-danger" data-del="' + esc(u.id) + '">ลบ</button>' : '') + '</div></td></tr>';
         }).join('') + '</tbody></table></div>' : '<div class="card empty">ยังไม่มีบัญชี</div>');
@@ -545,14 +641,16 @@
         openModal('<h3>' + (u.id ? 'แก้ไขบัญชี' : 'เพิ่มบัญชีผู้ดูแล') + '</h3><form id="uForm">' +
           '<div class="grid g2" style="gap:0 14px"><div class="field"><label>ชื่อผู้ใช้ (ภาษาอังกฤษ/ตัวเลข)</label><input name="username" required autocapitalize="none" value="' + esc(u.username || '') + '"></div>' +
           '<div class="field"><label>ชื่อที่แสดง</label><input name="name" value="' + esc(u.name || '') + '" placeholder="เช่น ครูสมใจ (ประชาสัมพันธ์)"></div></div>' +
-          '<div class="field"><label>สิทธิ์</label><select name="role"><option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>ผู้ดูแลระบบ (ทุกเมนู)</option><option value="editor"' + (u.role === 'editor' ? ' selected' : '') + '>ผู้จัดการเนื้อหาเว็บ</option></select></div>' +
-          '<div class="field"><label>' + (u.id ? 'รีเซ็ตรหัสผ่าน (เว้นว่าง = ไม่เปลี่ยน)' : 'รหัสผ่านเริ่มต้น') + '</label><input type="password" name="password" autocomplete="new-password"' + (u.id ? '' : ' required') + '><div class="hint">อย่างน้อย 8 ตัว มีทั้งตัวอักษรและตัวเลข · ผู้ใช้จะต้องเปลี่ยนรหัสเองเมื่อเข้าใช้</div></div>' +
+          '<div class="grid g2" style="gap:0 14px"><div class="field"><label>สิทธิ์</label><select name="role"><option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>ผู้ดูแลระบบ (ทุกเมนู)</option><option value="editor"' + (u.role === 'editor' ? ' selected' : '') + '>ผู้จัดการเนื้อหาเว็บ</option></select></div>' +
+          '<div class="field"><label>อีเมล (สำหรับลืมรหัสผ่าน)</label><input type="email" name="email" value="' + esc(u.email || '') + '"></div></div>' +
+          '<div class="field"><label>' + (u.id ? 'รีเซ็ตรหัสผ่าน (เว้นว่าง = ไม่เปลี่ยน)' : 'รหัสผ่านเริ่มต้น') + '</label><div class="row" style="flex-wrap:nowrap"><input name="password" autocomplete="new-password" style="font-family:monospace"' + (u.id ? '' : ' required value="' + strongPassword(12) + '"') + '><button type="button" class="btn btn-sm" id="uGen">สุ่ม</button></div><div class="hint">จดรหัสนี้ไปบอกเจ้าของบัญชี · ผู้ใช้จะต้องเปลี่ยนรหัสเองเมื่อเข้าใช้ครั้งแรก</div></div>' +
           '<label class="row" style="font-weight:400;margin-bottom:18px"><input type="checkbox" name="active"' + (u.active !== false ? ' checked' : '') + '> เปิดใช้งาน</label>' +
           '<div class="row"><span class="spacer"></span><button type="button" class="btn" data-close>ยกเลิก</button><button class="btn btn-primary">บันทึก</button></div></form>');
+        $('uGen').onclick = function () { $('uForm').password.value = strongPassword(12); };
         $('uForm').onsubmit = function (e) {
           e.preventDefault();
           var f = formData(e.target);
-          api('userSave', { user: { id: u.id, username: f.username, name: f.name, role: f.role, active: !!f.active }, userPassword: f.password || undefined })
+          api('userSave', { user: { id: u.id, username: f.username, name: f.name, role: f.role, email: f.email, active: !!f.active }, userPassword: f.password || undefined })
             .then(function () { closeModal(); U.toast('บันทึกแล้ว', 'ok'); views.users(); }).catch(fail);
         };
       }
