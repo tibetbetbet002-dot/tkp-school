@@ -1,16 +1,17 @@
 /* หน้าผู้บริหาร / ผู้ดูแลระบบ */
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var PW = '', S = {}, charts = [], current = 'dash';
-  try { PW = sessionStorage.getItem('tkp_pw') || ''; } catch (e) { }
+  var USER = '', PW = '', ME = null, S = {}, charts = [], current = 'site';
+  try { USER = sessionStorage.getItem('tkp_user') || ''; PW = sessionStorage.getItem('tkp_pw') || ''; } catch (e) { }
   var STATUS_CLASS = { present: 'b-present', late: 'b-late', leave: 'b-leave', official: 'b-official', absent: 'b-absent', waiting: 'b-waiting', off: 'b-off', future: 'b-future' };
   var esc = U.esc;
 
   if (U.DEMO) { $('demoBar').classList.remove('hidden'); window.addEventListener('demo-line', function (e) { U.toast('LINE (จำลอง)\n' + e.detail, 'line'); }); }
 
   function api(action, payload) {
-    return API.call(action, Object.assign({ password: PW }, payload || {})).catch(function (e) {
+    return API.call(action, Object.assign({ username: USER, password: PW }, payload || {})).catch(function (e) {
       if (e.code === 'AUTH' && action !== 'adminLogin') logout();
+      if (e.code === 'MUST_CHANGE') changePassword(true);
       throw e;
     });
   }
@@ -30,25 +31,60 @@
     document.querySelectorAll('[data-s]').forEach(function (el) { el.textContent = d.settings[el.dataset.s] || el.textContent; });
   }).catch(fail);
 
-  function enter() {
-    $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden'); $('logoutBtn').classList.remove('hidden');
+  function saveSession() { try { sessionStorage.setItem('tkp_user', USER); sessionStorage.setItem('tkp_pw', PW); } catch (x) { } }
+  function enter(me) {
+    ME = me;
+    var isAdmin = me.role === 'admin';
+    document.querySelectorAll('#side .admin-only').forEach(function (el) { el.classList.toggle('hidden', !isAdmin); });
+    $('whoami').textContent = '👤 ' + me.name + ' (' + (ADMIN_ROLES[me.role] || me.role) + ')';
+    ['whoami', 'pwBtn', 'logoutBtn'].forEach(function (id) { $(id).classList.remove('hidden'); });
+    $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
+    if (me.mustChange) { changePassword(true); return; }
+    if (!isAdmin && !document.querySelector('#side [data-view="' + current + '"][data-editor]')) current = 'site';
     api('settingsGet').then(function (s) { S = s; show(current); }).catch(fail);
-    refreshLeaveCount();
+    if (isAdmin) refreshLeaveCount();
   }
   function logout() {
-    PW = ''; try { sessionStorage.removeItem('tkp_pw'); } catch (e) { }
-    $('appView').classList.add('hidden'); $('loginView').classList.remove('hidden'); $('logoutBtn').classList.add('hidden');
+    USER = PW = ''; ME = null; try { sessionStorage.removeItem('tkp_user'); sessionStorage.removeItem('tkp_pw'); } catch (e) { }
+    ['whoami', 'pwBtn', 'logoutBtn', 'appView'].forEach(function (id) { $(id).classList.add('hidden'); });
+    $('loginView').classList.remove('hidden'); closeModal();
   }
   $('logoutBtn').onclick = logout;
+  $('pwBtn').onclick = function () { changePassword(false); };
   $('loginForm').onsubmit = function (e) {
     e.preventDefault();
-    var pw = e.target.password.value;
-    API.call('adminLogin', { password: pw }).then(function () {
-      PW = pw; try { sessionStorage.setItem('tkp_pw', pw); } catch (x) { }
-      enter();
-    }).catch(fail);
+    var f = e.target, btn = f.querySelector('button'); btn.disabled = true;
+    API.call('adminLogin', { username: f.username.value.trim(), password: f.password.value }).then(function (me) {
+      USER = f.username.value.trim(); PW = f.password.value; saveSession(); f.password.value = '';
+      enter(me);
+    }).catch(fail).finally(function () { btn.disabled = false; });
   };
-  if (PW) api('adminLogin').then(enter).catch(function () { });
+  if (USER && PW) api('adminLogin').then(enter).catch(function () { });
+
+  // เปลี่ยนรหัสผ่าน (บังคับเมื่อเข้าครั้งแรกด้วยบัญชีเริ่มต้น หรือหลังผู้ดูแลรีเซ็ตรหัสให้)
+  function changePassword(forced) {
+    var first = ME && ME.username === 'admin' && forced && !ME.id;
+    openModal('<h3>' + (forced ? '🔒 ตั้งรหัสผ่านใหม่ก่อนใช้งาน' : 'เปลี่ยนรหัสผ่าน') + '</h3>' +
+      (first ? '<p class="muted small">นี่คือการเข้าใช้ครั้งแรกด้วยบัญชีเริ่มต้น กรุณาตั้งชื่อผู้ใช้และรหัสผ่านของคุณเอง รหัสเริ่มต้น admin1234 จะใช้ไม่ได้อีก</p>' : '<p class="muted small">รหัสผ่านต้องยาวอย่างน้อย 8 ตัว และมีทั้งตัวอักษรและตัวเลข</p>') +
+      '<form id="pwForm">' +
+      (first ? '<div class="field"><label>ชื่อผู้ใช้ใหม่ (ภาษาอังกฤษ/ตัวเลข)</label><input name="newUsername" required value="admin" autocapitalize="none"></div><div class="field"><label>ชื่อที่แสดง</label><input name="name" value="ผู้ดูแลระบบ"></div>' : '') +
+      '<div class="field"><label>รหัสผ่านใหม่</label><input type="password" name="pw1" required autocomplete="new-password" minlength="8"></div>' +
+      '<div class="field"><label>ยืนยันรหัสผ่านใหม่</label><input type="password" name="pw2" required autocomplete="new-password"></div>' +
+      '<div class="row"><span class="spacer"></span>' + (forced ? '<button type="button" class="btn" id="pwLogout">ออกจากระบบ</button>' : '<button type="button" class="btn" data-close>ยกเลิก</button>') + '<button class="btn btn-primary">บันทึก</button></div></form>');
+    if ($('pwLogout')) $('pwLogout').onclick = logout;
+    $('pwForm').onsubmit = function (e) {
+      e.preventDefault();
+      var f = formData(e.target);
+      if (f.pw1 !== f.pw2) { U.toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', 'bad'); return; }
+      api('myPasswordChange', { newPassword: f.pw1, newUsername: f.newUsername, name: f.name }).then(function (r) {
+        USER = r.username; PW = f.pw1; saveSession(); closeModal();
+        U.toast('บันทึกรหัสผ่านใหม่แล้ว', 'ok');
+        return api('adminLogin').then(enter);
+      }).catch(fail);
+    };
+  }
+  // ปิดหน้าต่างบังคับเปลี่ยนรหัสไม่ได้
+  $('modal').addEventListener('click', function (e) { if (ME && ME.mustChange && $('pwForm') && e.target === this) e.stopImmediatePropagation(); }, true);
 
   function refreshLeaveCount() {
     api('leavesList').then(function (l) {
@@ -169,7 +205,7 @@
   views.teachers = function () {
     api('teachersList').then(function (list) {
       $('view').innerHTML = head('ครูและบุคลากร', '<button class="btn btn-primary" id="tAdd">+ เพิ่มครู</button>') +
-        '<p class="muted small" style="margin-top:-8px">ลงทะเบียนใบหน้าครูทุกคนก่อนใช้งาน (ทำครั้งเดียว ใช้เวลาประมาณ 10 วินาที/คน) · PIN ใช้สำหรับขอลาและดูประวัติ</p>' +
+        '<p class="muted small" style="margin-top:-8px">เพิ่มชื่อครูและตั้ง PIN ที่นี่ แล้วให้ครูลงทะเบียนใบหน้าเองบนมือถือที่หน้า <a href="checkin.html#enroll" target="_blank">ลงเวลาครู → ลงทะเบียนใบหน้า</a> (หรือกด “สแกนหน้า” ให้ที่นี่ก็ได้) · หลังลงทะเบียน ระบบจะจำหน้าได้เองและลงเวลาให้อัตโนมัติ</p>' +
         '<div class="table-wrap"><table><thead><tr><th></th><th>ชื่อ - สกุล</th><th>ตำแหน่ง</th><th>PIN</th><th>ใบหน้า</th><th>สถานะ</th><th></th></tr></thead><tbody>' +
         (list.length ? list.map(function (t) {
           return '<tr><td>' + (t.photo ? '<img src="' + esc(t.photo) + '" style="width:44px;height:44px;border-radius:50%;object-fit:cover">' : '<div class="avatar" style="width:44px;height:44px;font-size:1rem;border-width:2px;margin:0">' + esc(t.name.charAt(0)) + '</div>') + '</td>' +
@@ -473,8 +509,6 @@
         '<div class="card"><h3>🙂 การสแกนใบหน้า</h3>' + toggle('liveness', 'ตรวจการกระพริบตา (ป้องกันการใช้รูปถ่ายมาสแกน)') +
         '<div class="grid g3" style="gap:0 14px">' + inp(s, 'faceThreshold', 'ความเข้มงวดการจับคู่ใบหน้า', 'type="number" step="0.01" min="0.3" max="0.7"', 'ค่าน้อย = เข้มงวดขึ้น (แนะนำ 0.45–0.55)') + '</div></div>' +
 
-        '<div class="card"><h3>🔒 เปลี่ยนรหัสผ่านผู้ดูแล</h3><div class="grid g3" style="gap:0 14px"><div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="sNewPw" autocomplete="new-password" placeholder="อย่างน้อย 6 ตัวอักษร"></div></div>' +
-        '<p class="small muted">รหัสผ่านนี้ใช้เข้าหน้าผู้ดูแลทั้งหมด ควรบอกเฉพาะผู้บริหารหรือผู้ที่ได้รับมอบหมาย</p></div>' +
         '</form>';
 
       function drawMap() {
@@ -491,13 +525,40 @@
         }).catch(function (e) { $('sHereInfo').textContent = e.message; });
       };
       $('sSave').onclick = function () {
-        var pw = $('sNewPw').value;
-        api('settingsSave', { settings: collect($('sForm')), newPassword: pw || undefined }).then(function () {
-          U.toast('บันทึกการตั้งค่าแล้ว', 'ok');
-          if (pw) { PW = pw; try { sessionStorage.setItem('tkp_pw', pw); } catch (e) { } }
-          views.settings();
-        }).catch(fail);
+        api('settingsSave', { settings: collect($('sForm')) }).then(function () { U.toast('บันทึกการตั้งค่าแล้ว', 'ok'); views.settings(); }).catch(fail);
       };
+    }).catch(fail);
+  };
+
+  // ---------- บัญชีผู้ดูแล ----------
+  views.users = function () {
+    api('usersList').then(function (list) {
+      $('view').innerHTML = head('บัญชีผู้ดูแล', '<button class="btn btn-primary" id="uAdd">+ เพิ่มบัญชี</button>') +
+        '<p class="muted small" style="margin-top:-8px"><b>ผู้ดูแลระบบ</b> ใช้ได้ทุกเมนู · <b>ผู้จัดการเนื้อหาเว็บ</b> แก้ได้เฉพาะข่าว ปฏิทิน ลิงก์ และข้อมูลหน้าเว็บ (เหมาะกับครูที่ดูแลประชาสัมพันธ์) · บัญชีใหม่ต้องเปลี่ยนรหัสเองเมื่อเข้าใช้ครั้งแรก</p>' +
+        (list.length ? '<div class="table-wrap"><table><thead><tr><th>ชื่อผู้ใช้</th><th>ชื่อ</th><th>สิทธิ์</th><th>สถานะ</th><th></th></tr></thead><tbody>' + list.map(function (u) {
+          return '<tr><td><b>' + esc(u.username) + '</b>' + (ME && u.id === ME.id ? ' <span class="badge">คุณ</span>' : '') + '</td><td>' + esc(u.name) + '</td><td>' + esc(ADMIN_ROLES[u.role] || u.role) + '</td>' +
+            '<td>' + (u.locked ? badge('late', 'ถูกล็อกชั่วคราว') : u.active ? badge('present', 'ใช้งาน') : badge('off', 'ปิดใช้งาน')) + '</td>' +
+            '<td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn btn-sm" data-edit="' + esc(u.id) + '">แก้ไข / รีเซ็ตรหัส</button>' + (ME && u.id !== ME.id ? '<button class="btn btn-sm btn-danger" data-del="' + esc(u.id) + '">ลบ</button>' : '') + '</div></td></tr>';
+        }).join('') + '</tbody></table></div>' : '<div class="card empty">ยังไม่มีบัญชี</div>');
+      var byId = {}; list.forEach(function (u) { byId[u.id] = u; });
+      function edit(u) {
+        openModal('<h3>' + (u.id ? 'แก้ไขบัญชี' : 'เพิ่มบัญชีผู้ดูแล') + '</h3><form id="uForm">' +
+          '<div class="grid g2" style="gap:0 14px"><div class="field"><label>ชื่อผู้ใช้ (ภาษาอังกฤษ/ตัวเลข)</label><input name="username" required autocapitalize="none" value="' + esc(u.username || '') + '"></div>' +
+          '<div class="field"><label>ชื่อที่แสดง</label><input name="name" value="' + esc(u.name || '') + '" placeholder="เช่น ครูสมใจ (ประชาสัมพันธ์)"></div></div>' +
+          '<div class="field"><label>สิทธิ์</label><select name="role"><option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>ผู้ดูแลระบบ (ทุกเมนู)</option><option value="editor"' + (u.role === 'editor' ? ' selected' : '') + '>ผู้จัดการเนื้อหาเว็บ</option></select></div>' +
+          '<div class="field"><label>' + (u.id ? 'รีเซ็ตรหัสผ่าน (เว้นว่าง = ไม่เปลี่ยน)' : 'รหัสผ่านเริ่มต้น') + '</label><input type="password" name="password" autocomplete="new-password"' + (u.id ? '' : ' required') + '><div class="hint">อย่างน้อย 8 ตัว มีทั้งตัวอักษรและตัวเลข · ผู้ใช้จะต้องเปลี่ยนรหัสเองเมื่อเข้าใช้</div></div>' +
+          '<label class="row" style="font-weight:400;margin-bottom:18px"><input type="checkbox" name="active"' + (u.active !== false ? ' checked' : '') + '> เปิดใช้งาน</label>' +
+          '<div class="row"><span class="spacer"></span><button type="button" class="btn" data-close>ยกเลิก</button><button class="btn btn-primary">บันทึก</button></div></form>');
+        $('uForm').onsubmit = function (e) {
+          e.preventDefault();
+          var f = formData(e.target);
+          api('userSave', { user: { id: u.id, username: f.username, name: f.name, role: f.role, active: !!f.active }, userPassword: f.password || undefined })
+            .then(function () { closeModal(); U.toast('บันทึกแล้ว', 'ok'); views.users(); }).catch(fail);
+        };
+      }
+      $('uAdd').onclick = function () { edit({ role: 'editor', active: true }); };
+      $('view').querySelectorAll('[data-edit]').forEach(function (b) { b.onclick = function () { edit(byId[b.dataset.edit]); }; });
+      $('view').querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { if (confirm('ลบบัญชีนี้?')) api('userDelete', { id: b.dataset.del }).then(function () { views.users(); }).catch(fail); }; });
     }).catch(fail);
   };
 })();

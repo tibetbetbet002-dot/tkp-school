@@ -60,6 +60,53 @@ var LEAVE_TYPES = ['ลาป่วย', 'ลากิจส่วนตัว',
 var NEWS_CATEGORIES = ['ข่าวประชาสัมพันธ์', 'กิจกรรม', 'ประกาศ', 'ผลงาน/รางวัล'];
 var LINK_CATEGORIES = ['ลิงก์หน่วยงาน', 'เอกสารดาวน์โหลด', 'บริการออนไลน์'];
 
+// ข้อมูลที่ "ผู้จัดการเนื้อหา" แก้ได้ (แก้ได้เฉพาะหน้าเว็บ ไม่เกี่ยวกับระบบลงเวลา)
+var SITE_KEYS = ['schoolName', 'schoolNameEn', 'motto', 'vision', 'mission', 'goals', 'identity', 'uniqueness', 'schoolColors', 'history',
+  'about', 'address', 'affiliation', 'phone', 'email', 'facebook', 'mapUrl', 'oitUrl', 'announcement', 'directorName', 'directorTitle',
+  'directorPhoto', 'directorMessage', 'studentsCount', 'classesCount', 'founded', 'logoUrl', 'heroImage'];
+var ADMIN_ROLES = { admin: 'ผู้ดูแลระบบ', editor: 'ผู้จัดการเนื้อหาเว็บ' };
+
+/* SHA-256 (เขียนเองเพื่อให้ใช้ได้ทั้งเบราว์เซอร์และ Apps Script แบบไม่ต้องรอ) */
+function coreSha256(str) {
+  var ascii = unescape(encodeURIComponent(str));
+  function rr(v, n) { return (v >>> n) | (v << (32 - n)); }
+  var maxWord = Math.pow(2, 32), i, j, result = '', words = [], bitLen = ascii.length * 8;
+  var hash = [], k = [], count = 0, composite = {};
+  for (var c = 2; count < 64; c++) {
+    if (!composite[c]) {
+      for (i = 0; i < 313; i += c) composite[i] = c;
+      hash[count] = (Math.pow(c, .5) * maxWord) | 0;
+      k[count++] = (Math.pow(c, 1 / 3) * maxWord) | 0;
+    }
+  }
+  hash = hash.slice(0, 8);
+  ascii += '\x80';
+  while (ascii.length % 64 - 56) ascii += '\x00';
+  for (i = 0; i < ascii.length; i++) words[i >> 2] |= ascii.charCodeAt(i) << ((3 - i) % 4) * 8;
+  words[words.length] = (bitLen / maxWord) | 0;
+  words[words.length] = bitLen;
+  for (j = 0; j < words.length;) {
+    var w = words.slice(j, j += 16), old = hash;
+    hash = hash.slice(0, 8);
+    for (i = 0; i < 64; i++) {
+      var w15 = w[i - 15], w2 = w[i - 2], a = hash[0], e = hash[4];
+      var t1 = hash[7] + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & hash[5]) ^ ((~e) & hash[6])) + k[i] +
+        (w[i] = (i < 16) ? w[i] : (w[i - 16] + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))) | 0);
+      var t2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+      hash = [(t1 + t2) | 0].concat(hash);
+      hash[4] = (hash[4] + t1) | 0;
+    }
+    for (i = 0; i < 8; i++) hash[i] = (hash[i] + old[i]) | 0;
+  }
+  for (i = 0; i < 8; i++) for (j = 3; j + 1; j--) { var b = (hash[i] >> (j * 8)) & 255; result += (b < 16 ? '0' : '') + b.toString(16); }
+  return result;
+}
+function corePasswordHash(password, salt) {
+  var h = salt + ':' + password;
+  for (var i = 0; i < 300; i++) h = coreSha256(salt + h); // วนหลายรอบให้เดารหัสยากขึ้น
+  return h;
+}
+
 function createCore(db, env) {
   var TZ_MS = 7 * 3600 * 1000; // เวลาประเทศไทย UTC+7
 
@@ -120,7 +167,42 @@ function createCore(db, env) {
     return db.rows('teachers').filter(isActive).sort(function (a, b) { return (Number(a.order) || 999) - (Number(b.order) || 999); });
   }
   function fail(msg, code) { var e = new Error(msg); e.code = code || 'ERROR'; throw e; }
-  function requireAdmin(req) { if (!req.password || req.password !== settings().adminPassword) fail('รหัสผ่านผู้ดูแลไม่ถูกต้อง', 'AUTH'); }
+  // ---------- บัญชีผู้ดูแล (ชื่อผู้ใช้ + รหัสผ่าน) ----------
+  function admins() { return db.rows('admins'); }
+  function findAdmin(username) {
+    var u = String(username || '').trim().toLowerCase();
+    return admins().filter(function (a) { return String(a.username).toLowerCase() === u; })[0];
+  }
+  function checkPasswordRule(pw) {
+    pw = String(pw || '');
+    if (pw.length < 8 || !/[0-9]/.test(pw) || !/[^0-9]/.test(pw)) fail('รหัสผ่านต้องยาวอย่างน้อย 8 ตัว และมีทั้งตัวอักษรและตัวเลข');
+  }
+  function setPassword(user, pw) {
+    user.salt = uid() + Math.random().toString(36).slice(2);
+    user.hash = corePasswordHash(pw, user.salt);
+  }
+  function authAdmin(req) {
+    var all = admins();
+    // ยังไม่มีบัญชีเลย: ใช้บัญชีเริ่มต้น admin + รหัสในแผ่นงานตั้งค่า แล้วบังคับเปลี่ยนรหัส
+    if (!all.length) {
+      if (String(req.username || '').toLowerCase() === 'admin' && req.password && req.password === settings().adminPassword)
+        return { id: '', username: 'admin', name: 'ผู้ดูแลระบบ', role: 'admin', mustChange: true, bootstrap: true };
+      fail('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'AUTH');
+    }
+    var u = findAdmin(req.username), now = env.now().getTime();
+    if (!u || String(u.active) === 'false') fail('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'AUTH');
+    if (Number(u.lockUntil) > now) fail('บัญชีถูกล็อกชั่วคราวเพราะใส่รหัสผิดหลายครั้ง ลองใหม่ในอีก ' + Math.ceil((Number(u.lockUntil) - now) / 60000) + ' นาที', 'AUTH');
+    if (corePasswordHash(String(req.password || ''), u.salt) !== u.hash) {
+      u.failCount = (Number(u.failCount) || 0) + 1;
+      if (u.failCount >= 5) { u.lockUntil = now + 15 * 60000; u.failCount = 0; }
+      db.put('admins', 'id', u);
+      fail('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'AUTH');
+    }
+    if (Number(u.failCount) || Number(u.lockUntil)) { u.failCount = 0; u.lockUntil = ''; db.put('admins', 'id', u); }
+    return { id: u.id, username: u.username, name: u.name, role: u.role === 'editor' ? 'editor' : 'admin', mustChange: String(u.mustChange) === 'true' };
+  }
+  var EDITOR_ACTIONS = { adminLogin: 1, myPasswordChange: 1, settingsGet: 1, settingsSave: 1, newsSave: 1, newsDelete: 1,
+    eventSave: 1, eventDelete: 1, linkSave: 1, linkDelete: 1, uploadImage: 1 };
   function requireTeacher(req) {
     var t = db.rows('teachers').filter(function (x) { return String(x.id) === String(req.teacherId); })[0];
     if (!t) fail('ไม่พบข้อมูลครู');
@@ -239,7 +321,7 @@ function createCore(db, env) {
     var mode = req.mode === 'out' ? 'out' : 'in';
     var row = db.rows('attendance').filter(function (r) { return r.date === now.date && String(r.teacherId) === String(best.id); })[0];
     var photo = req.photo && env.savePhoto ? env.savePhoto(req.photo, now.date + '_' + best.name + '_' + mode) : '';
-    var result = { name: best.name, position: best.position, mode: mode, time: now.time, date: now.date, distance: Math.round(dist), score: Math.round((1 - bestD) * 100) };
+    var result = { teacherId: best.id, name: best.name, position: best.position, mode: mode, time: now.time, date: now.date, distance: Math.round(dist), score: Math.round((1 - bestD) * 100) };
 
     if (mode === 'in') {
       if (row && row.timeIn) { result.already = true; result.time = row.timeIn; result.status = row.status; return result; }
@@ -306,7 +388,49 @@ function createCore(db, env) {
 
   // ---------- ผู้ดูแล ----------
   var admin = {
-    adminLogin: function () { return { ok: true }; },
+    adminLogin: function (req, me) { return me; },
+    myPasswordChange: function (req, me) {
+      checkPasswordRule(req.newPassword);
+      if (me.bootstrap) {
+        // เปลี่ยนจากบัญชีเริ่มต้นเป็นบัญชีจริงครั้งแรก (ตั้งชื่อผู้ใช้ใหม่ได้)
+        var username = String(req.newUsername || 'admin').trim();
+        if (!/^[a-zA-Z0-9._-]{3,30}$/.test(username)) fail('ชื่อผู้ใช้ใช้ได้เฉพาะ a-z 0-9 . _ - ยาว 3-30 ตัว');
+        var first = { id: uid(), username: username, name: req.name || 'ผู้ดูแลระบบ', role: 'admin', active: 'true', failCount: 0, lockUntil: '', mustChange: 'false' };
+        setPassword(first, req.newPassword);
+        db.add('admins', first);
+        var s = db.settings() || {}; s.adminPassword = uid() + uid(); db.saveSettings(s); // ปิดรหัสเริ่มต้นเดิม
+        return { username: username };
+      }
+      var u = findAdmin(me.username);
+      setPassword(u, req.newPassword); u.mustChange = 'false'; db.put('admins', 'id', u);
+      return { username: u.username };
+    },
+    usersList: function () {
+      return admins().map(function (a) { return { id: a.id, username: a.username, name: a.name, role: a.role, active: String(a.active) !== 'false', locked: Number(a.lockUntil) > env.now().getTime() }; });
+    },
+    userSave: function (req, me) {
+      var u = req.user || {}, all = admins();
+      var username = String(u.username || '').trim();
+      if (!/^[a-zA-Z0-9._-]{3,30}$/.test(username)) fail('ชื่อผู้ใช้ใช้ได้เฉพาะ a-z 0-9 . _ - ยาว 3-30 ตัว');
+      var dup = findAdmin(username);
+      if (dup && dup.id !== u.id) fail('ชื่อผู้ใช้นี้มีอยู่แล้ว');
+      var old = u.id ? all.filter(function (a) { return a.id === u.id; })[0] : null;
+      var item = old || { id: uid(), failCount: 0, lockUntil: '' };
+      item.username = username; item.name = u.name || username; item.role = u.role === 'editor' ? 'editor' : 'admin';
+      item.active = u.active === false ? 'false' : 'true';
+      if (old && old.id === me.id && (item.role !== 'admin' || item.active === 'false')) fail('ไม่สามารถลดสิทธิ์หรือปิดบัญชีของตัวเองได้');
+      // req.password คือรหัสของผู้ที่ล็อกอินอยู่ รหัสของบัญชีที่แก้ใช้ req.userPassword
+      if (req.userPassword) { checkPasswordRule(req.userPassword); setPassword(item, req.userPassword); item.mustChange = 'true'; item.failCount = 0; item.lockUntil = ''; }
+      else if (!old) fail('กรุณาตั้งรหัสผ่านเริ่มต้น');
+      if (old) db.put('admins', 'id', item); else db.add('admins', item);
+      return { id: item.id };
+    },
+    userDelete: function (req, me) {
+      if (req.id === me.id) fail('ไม่สามารถลบบัญชีของตัวเองได้');
+      var left = admins().filter(function (a) { return a.id !== req.id && a.role !== 'editor' && String(a.active) !== 'false'; });
+      if (!left.length) fail('ต้องมีผู้ดูแลระบบอย่างน้อย 1 บัญชี');
+      db.del('admins', 'id', req.id); return { ok: true };
+    },
     dashboard: function (req) {
       var now = nowBkk(), date = req.date || now.date, month = req.month || date.slice(0, 7);
       var pending = db.rows('leaves').filter(function (l) { return l.status === 'รออนุมัติ'; }).length;
@@ -400,10 +524,13 @@ function createCore(db, env) {
       return { url: env.saveImage(req.imageData, req.name || 'image') };
     },
     settingsGet: function () { var s = settings(); delete s.adminPassword; return s; },
-    settingsSave: function (req) {
+    settingsSave: function (req, me) {
       var cur = db.settings() || {}, inc = req.settings || {};
-      for (var k in inc) if (CORE_DEFAULT_SETTINGS.hasOwnProperty(k) && k !== 'adminPassword') cur[k] = String(inc[k]);
-      if (req.newPassword) { if (String(req.newPassword).length < 6) fail('รหัสผ่านใหม่ต้องยาวอย่างน้อย 6 ตัวอักษร'); cur.adminPassword = String(req.newPassword); }
+      for (var k in inc) {
+        if (!CORE_DEFAULT_SETTINGS.hasOwnProperty(k) || k === 'adminPassword') continue;
+        if (me.role === 'editor' && SITE_KEYS.indexOf(k) < 0) continue; // ผู้จัดการเนื้อหาแก้ได้เฉพาะข้อมูลเว็บ
+        cur[k] = String(inc[k]);
+      }
       db.saveSettings(cur); return { ok: true };
     },
     photoGet: function (req) { return { data: env.getPhoto ? env.getPhoto(req.ref) : '' }; },
@@ -426,14 +553,34 @@ function createCore(db, env) {
     todayBoard: todayBoard,
     leaveRequest: leaveRequest,
     teacherHistory: teacherHistory,
-    verifyPin: function (req) { var t = requireTeacher(req); return { id: t.id, name: t.name }; }
+    verifyPin: function (req) { var t = requireTeacher(req); return { id: t.id, name: t.name }; },
+    teacherEnrollFace: function (req) {
+      // ครูลงทะเบียนใบหน้าเองได้ครั้งแรก (ต้องใช้ PIN) ถ้าจะลงทะเบียนใหม่ต้องให้ผู้ดูแลทำ
+      var t = requireTeacher(req), s = settings();
+      if (parseFaces(t).length) fail('ลงทะเบียนใบหน้าไว้แล้ว หากต้องการลงทะเบียนใหม่ กรุณาติดต่อผู้ดูแลระบบ');
+      var faces = req.faces || [];
+      if (!faces.length || faces[0].length !== 128) fail('ข้อมูลใบหน้าไม่ถูกต้อง');
+      teachers().forEach(function (o) {
+        if (String(o.id) === String(t.id)) return;
+        parseFaces(o).forEach(function (f) { if (faceDistance(faces[0], f) < Number(s.faceThreshold)) fail('ใบหน้านี้ตรงกับ ' + o.name + ' ที่มีในระบบแล้ว'); });
+      });
+      t.faces = JSON.stringify(faces);
+      if (req.photo) t.photo = req.photo;
+      db.put('teachers', 'id', t);
+      return { id: t.id, name: t.name };
+    }
   };
 
   function handle(req) {
     try {
       var a = req && req.action;
       if (publicActions[a]) return { ok: true, data: publicActions[a](req) };
-      if (admin[a]) { requireAdmin(req); return { ok: true, data: admin[a](req) }; }
+      if (admin[a]) {
+        var me = authAdmin(req);
+        if (me.role !== 'admin' && !EDITOR_ACTIONS[a]) fail('บัญชีนี้ไม่มีสิทธิ์ใช้งานส่วนนี้', 'ROLE');
+        if (me.mustChange && a !== 'adminLogin' && a !== 'myPasswordChange') fail('กรุณาเปลี่ยนรหัสผ่านก่อนใช้งาน', 'MUST_CHANGE');
+        return { ok: true, data: admin[a](req, me) };
+      }
       fail('ไม่รู้จักคำสั่ง ' + a);
     } catch (e) {
       return { ok: false, error: e.message || String(e), code: e.code || 'ERROR' };
