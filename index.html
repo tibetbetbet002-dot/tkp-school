@@ -39,7 +39,7 @@
       <a href="#about">ข้อมูลโรงเรียน</a>
       <a href="#director">ผู้บริหาร</a>
       <a href="#news">ข่าวสาร</a>
-      <a href="#gallery" id="navGallery" class="hidden">ภาพกิจกรรม</a>
+      <a href="#gallery">ภาพกิจกรรม</a>
       <a href="#calendar">ปฏิทิน</a>
       <a href="#staff">บุคลากร</a>
       <a id="navOit" target="_blank" rel="noopener" class="hidden">ITA / OIT</a>
@@ -52,7 +52,13 @@
 <div class="ticker hidden" id="ticker"><div class="container row" style="flex-wrap:nowrap"><b>📢 ประกาศ</b><div class="ticker-track"><span id="tickerText"></span></div></div></div>
 
 <header class="hero" id="top">
-  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-slides" id="heroSlides" aria-hidden="true">
+    <img class="active" src="assets/photos/hero-aerial.jpg" alt="">
+    <img src="assets/photos/hero-sign.jpg" alt="" loading="lazy">
+    <img src="assets/photos/hero-assembly.jpg" alt="" loading="lazy">
+    <img src="assets/photos/hero-flag.jpg" alt="" loading="lazy">
+  </div>
+  <div class="hero-shade" aria-hidden="true"></div>
   <div class="hero-deco" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="container hero-in">
     <div class="hero-text">
@@ -65,9 +71,12 @@
         <a class="btn btn-ghost btn-lg" href="#news">ข่าวสารล่าสุด</a>
       </div>
     </div>
-    <div class="hero-emblem anim" style="--d:.2s">
-      <div class="ring r1"></div><div class="ring r2"></div>
-      <div class="hero-logo"><img id="heroLogo" src="assets/logo.png" alt="ตราโรงเรียนบ้านทุ่งข้าวพวง"></div>
+    <div class="hero-side anim" style="--d:.2s">
+      <div class="hero-emblem">
+        <div class="ring r1"></div><div class="ring r2"></div>
+        <div class="hero-logo"><img id="heroLogo" src="assets/logo.png" alt="ตราโรงเรียนบ้านทุ่งข้าวพวง"></div>
+      </div>
+      <div class="clock-pill"><div class="t" id="clock">--:--:--</div><div class="d" id="clockDate"></div></div>
     </div>
   </div>
   <a href="#stats" class="scroll-hint" aria-label="เลื่อนลง"><span></span></a>
@@ -108,6 +117,7 @@
       <div class="card info-body" id="infoBody"></div>
     </div>
     <div class="grid" style="gap:16px">
+      <figure class="about-photo reveal"><img src="assets/photos/school-sign.jpg" alt="ป้ายโรงเรียนบ้านทุ่งข้าวพวง" loading="lazy"><figcaption><b id="aboutStudents">423</b> นักเรียน · ปีการศึกษา <span id="aboutYear"></span></figcaption></figure>
       <div class="card feature reveal" style="--d:.05s"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l10-4 10 4-10 4z"/><path d="M6 9v5c0 1.7 2.7 3 6 3s6-1.3 6-3V9"/></svg></div><div><h3>วิชาการเข้มแข็ง</h3><p class="muted" style="margin:0">จัดการเรียนรู้ที่เน้นผู้เรียนเป็นสำคัญ ส่งเสริมการอ่านออก เขียนได้ คิดเลขเป็น</p></div></div>
       <div class="card feature reveal" style="--d:.12s"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></div><div><h3>คุณธรรมนำชีวิต</h3><p class="muted" style="margin:0">ปลูกฝังความซื่อสัตย์ มีวินัย จิตอาสา และความกตัญญู</p></div></div>
       <div class="card feature reveal" style="--d:.19s"><div class="ic"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 7 8 4 4 4c0 5 3 8 8 8zM12 12c0-4 3-7 8-7 0 4-3 7-8 7z"/></svg></div><div><h3>รักษ์ท้องถิ่น</h3><p class="muted" style="margin:0">เรียนรู้วิถีชุมชน ภูมิปัญญาท้องถิ่น และหลักปรัชญาของเศรษฐกิจพอเพียง</p></div></div>
@@ -127,7 +137,7 @@
 </section>
 
 <!-- ภาพกิจกรรม -->
-<section id="gallery" class="hidden">
+<section id="gallery">
   <div class="container">
     <div class="sec-head reveal"><span class="eyebrow">ภาพกิจกรรม</span><h2>บรรยากาศในโรงเรียน</h2></div>
     <div class="gallery" id="galleryGrid"></div>
@@ -154,6 +164,7 @@
 <section id="staff">
   <div class="container">
     <div class="sec-head reveal"><span class="eyebrow">บุคลากร</span><h2>คณะครูและบุคลากร</h2></div>
+    <figure class="staff-photo reveal"><img src="assets/photos/staff-group.jpg" alt="คณะครูและบุคลากรโรงเรียนบ้านทุ่งข้าวพวง" loading="lazy"></figure>
     <div class="grid g4" id="staffList"><div class="empty"><span class="spinner"></span></div></div>
   </div>
 </section>
@@ -219,6 +230,42 @@
     var t0 = null;
     (function step(t) { t0 = t0 || t; var p = Math.min(1, (t - t0) / 1400); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); })(performance.now());
   }
+  // นาฬิกา
+  function tick() {
+    var n = new Date();
+    $('clock').textContent = n.toLocaleTimeString('th-TH', { hour12: false });
+    $('clockDate').textContent = n.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  tick(); setInterval(tick, 1000);
+  var thYear = new Date().getFullYear() + 543;
+  $('aboutYear').textContent = new Date().getMonth() < 4 ? thYear - 1 : thYear;
+
+  // สไลด์รูปโรงเรียนด้านหลังส่วนหัว
+  var slideIdx = 0;
+  setInterval(function () {
+    var imgs = $('heroSlides').querySelectorAll('img');
+    if (imgs.length < 2 || document.hidden) return;
+    imgs[slideIdx].classList.remove('active');
+    slideIdx = (slideIdx + 1) % imgs.length;
+    imgs[slideIdx].classList.add('active');
+  }, 6500);
+
+  // ภาพโรงเรียน (คงที่) + รูปจากข่าว
+  var SCHOOL_PICS = [
+    ['assets/photos/hero-aerial.jpg', 'กิจกรรมหน้าเสาธง'], ['assets/photos/students-1.jpg', 'นักเรียนในชุดผ้าพื้นเมือง'],
+    ['assets/photos/students-2.jpg', 'นักเรียนระดับปฐมวัย'], ['assets/photos/hero-assembly.jpg', 'นักเรียนเข้าแถวตอนเช้า'],
+    ['assets/photos/students-3.jpg', 'นักเรียนไหว้ทักทาย'], ['assets/photos/school-sign.jpg', 'ป้ายโรงเรียนบ้านทุ่งข้าวพวง'],
+    ['assets/photos/hero-flag.jpg', 'บรรยากาศในโรงเรียน'], ['assets/photos/students-4.jpg', 'นักเรียนชั้นประถมศึกษา']
+  ];
+  function renderGallery(news) {
+    var pics = news.filter(function (n) { return n.image; }).slice(0, 8).map(function (n) { return [n.image, n.title]; }).concat(SCHOOL_PICS).slice(0, 12);
+    $('galleryGrid').innerHTML = pics.map(function (p, i) {
+      return '<button class="g-item reveal" style="--d:' + (i % 4) * .06 + 's" data-src="' + esc(p[0]) + '" data-cap="' + esc(p[1]) + '"><img loading="lazy" src="' + esc(p[0]) + '" alt=""><span>' + esc(p[1]) + '</span></button>';
+    }).join('');
+    reveal($('galleryGrid'));
+  }
+  renderGallery([]);
+
   var nav = $('nav'), toTop = $('toTop');
   addEventListener('scroll', function () { var y = scrollY; nav.classList.toggle('scrolled', y > 30); toTop.classList.toggle('show', y > 700); }, { passive: true });
 
@@ -260,7 +307,11 @@
     document.querySelectorAll('[data-s]').forEach(function (el) { var v = s[el.dataset.s]; if (v) el.textContent = v; });
     $('heroName').textContent = s.schoolName.replace(/^โรงเรียน/, '');
     $('navLogo').src = $('heroLogo').src = logo;
-    if (s.heroImage) { $('heroBg').style.backgroundImage = 'url("' + s.heroImage + '")'; $('heroBg').classList.add('photo'); }
+    if (s.heroImage) { // รูปที่ผู้ดูแลตั้งไว้ ขึ้นเป็นรูปแรกของสไลด์
+      var first = document.createElement('img'); first.src = s.heroImage; first.alt = '';
+      var slides = $('heroSlides'); slides.querySelector('.active').classList.remove('active'); first.className = 'active'; slides.insertBefore(first, slides.firstChild); slideIdx = 0;
+    }
+    if (s.studentsCount) $('aboutStudents').textContent = s.studentsCount;
 
     countUp($('stTeachers'), d.staff.length);
     countUp($('stStudents'), s.studentsCount);
@@ -291,15 +342,7 @@
     $('newsChips').innerHTML = ['ทั้งหมด'].concat(d.newsCategories || []).map(function (c, i) { return '<button data-cat="' + c + '" class="' + (i ? '' : 'active') + '">' + c + '</button>'; }).join('');
     renderNews();
 
-    // ภาพกิจกรรม (จากรูปข่าว)
-    var pics = d.news.filter(function (n) { return n.image; }).slice(0, 8);
-    if (pics.length) {
-      $('gallery').classList.remove('hidden'); $('navGallery').classList.remove('hidden');
-      $('galleryGrid').innerHTML = pics.map(function (n, i) {
-        return '<button class="g-item reveal" style="--d:' + (i % 4) * .06 + 's" data-src="' + esc(n.image) + '" data-cap="' + esc(n.title) + '"><img loading="lazy" src="' + esc(n.image) + '" alt=""><span>' + esc(n.title) + '</span></button>';
-      }).join('');
-      reveal($('galleryGrid'));
-    }
+    renderGallery(d.news);
 
     var today = U.todayStr();
     var upcoming = (d.events || []).filter(function (e) { return (e.dateEnd || e.date) >= today; }).slice(0, 6);

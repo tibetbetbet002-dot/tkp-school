@@ -32,7 +32,6 @@
 
   <div class="tabs" id="tabs" style="margin:16px 0 22px">
     <button data-tab="scan" class="active">สแกนลงเวลา</button>
-    <button data-tab="enroll">ลงทะเบียนใบหน้า</button>
     <button data-tab="leave">ขอลา / ไปราชการ</button>
     <button data-tab="history">ประวัติของฉัน</button>
   </div>
@@ -77,19 +76,6 @@
     </div>
   </div>
 
-  <!-- ===== ลงทะเบียนใบหน้า ===== -->
-  <div data-panel="enroll" class="hidden">
-    <div class="card card-lg">
-      <h3>ลงทะเบียนใบหน้าด้วยตัวเอง</h3>
-      <p class="muted small">ทำครั้งเดียว หลังจากนี้ระบบจะจำใบหน้าได้เองและลงเวลาให้อัตโนมัติ ใช้รหัส PIN ที่ได้รับจากผู้ดูแลระบบ<br>ถ้าเคยลงทะเบียนแล้วและต้องการลงใหม่ ให้ติดต่อผู้ดูแลระบบ</p>
-      <form id="enrollForm" class="grid g2" style="gap:0 14px">
-        <div class="field"><label>ชื่อ-สกุล</label><select name="teacherId" class="teacherSel" required></select></div>
-        <div class="field"><label>รหัส PIN</label><input name="pin" type="password" inputmode="numeric" maxlength="8" required placeholder="PIN"></div>
-      </form>
-      <div class="scanner" style="max-width:340px;margin-top:6px"><video id="eVideo" playsinline muted></video><div class="frame" id="eFrame"></div><div class="msg" id="eMsg">เลือกชื่อ ใส่ PIN แล้วกดเริ่ม</div></div>
-      <div class="center" style="margin-top:16px"><button class="btn btn-primary btn-lg" id="enrollBtn">เริ่มลงทะเบียนใบหน้า</button></div>
-    </div>
-  </div>
 
   <!-- ===== ขอลา ===== -->
   <div data-panel="leave" class="hidden">
@@ -236,11 +222,9 @@
         '<p class="small muted" style="margin:12px 0 18px">ห่างจุดศูนย์กลางโรงเรียน ' + r.distance + ' ม. · ความตรงกันของใบหน้า ' + r.score + '%' + (r.missingIn ? '<br><b style="color:var(--warn)">วันนี้ยังไม่ได้ลงเวลามา กรุณาแจ้งผู้ดูแล</b>' : '') + '</p>' +
         '<button class="btn btn-primary" id="againBtn">เสร็จสิ้น</button>';
     } else {
-      var notEnrolled = r.code === 'FACE';
       box.className = 'card card-lg result bad pop';
       box.innerHTML = '<div class="big">!</div><h2>ลงเวลาไม่สำเร็จ</h2><p class="muted">' + U.esc(r.message) + '</p>' +
-        '<div class="row" style="justify-content:center"><button class="btn btn-primary" id="againBtn">ลองอีกครั้ง</button>' + (notEnrolled ? '<button class="btn" id="goEnroll">ลงทะเบียนใบหน้า</button>' : '') + '</div>';
-      if (notEnrolled) $('goEnroll').onclick = function () { resetScan(); showTab('enroll'); };
+        '<button class="btn btn-primary" id="againBtn">ลองอีกครั้ง</button>';
     }
     $('againBtn').onclick = resetScan;
     clearTimeout(resetTimer); resetTimer = setTimeout(resetScan, ok ? 10000 : 20000);
@@ -256,27 +240,6 @@
     }).catch(function () { });
   }
 
-  // ลงทะเบียนใบหน้าด้วยตัวเอง
-  function eStatus(m, ok) { $('eMsg').textContent = m; $('eFrame').classList.toggle('ok', !!ok); }
-  $('enrollBtn').onclick = async function () {
-    var f = $('enrollForm'), btn = this;
-    if (!f.teacherId.value || !f.pin.value) { U.toast('กรุณาเลือกชื่อและใส่ PIN', 'bad'); return; }
-    btn.disabled = true;
-    try {
-      eStatus('กำลังตรวจสอบ PIN...');
-      await API.call('verifyPin', { teacherId: f.teacherId.value, pin: f.pin.value });
-      eStatus('กำลังเปิดกล้อง...');
-      await Face.load(); await Face.start($('eVideo'));
-      var r = await Face.enroll($('eVideo'), eStatus);
-      Face.stop();
-      var t = await API.call('teacherEnrollFace', { teacherId: f.teacherId.value, pin: f.pin.value, faces: r.faces, photo: r.photo });
-      ME = { id: t.id, name: t.name }; store('me', ME); showHello();
-      eStatus('ลงทะเบียนสำเร็จ ✓ ลงเวลาด้วยการสแกนหน้าได้เลย', true);
-      U.toast('ลงทะเบียนใบหน้าสำเร็จ', 'ok');
-      setTimeout(function () { showTab('scan'); loadPublic(); }, 1500);
-    } catch (e) { Face.stop(); eStatus(e.message); U.toast(e.message, 'bad'); }
-    finally { btn.disabled = false; }
-  };
 
   // ขอลา
   var today = U.todayStr();
