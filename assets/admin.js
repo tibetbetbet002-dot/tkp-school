@@ -305,11 +305,11 @@
       $('view').innerHTML = head('ข่าวประชาสัมพันธ์', '<button class="btn btn-primary" id="nAdd">+ เพิ่มข่าว</button>') +
         (d.news.length ? '<div class="grid g3">' + d.news.map(function (n) {
           return '<div class="card news-card" style="cursor:default"><div class="news-img">' + (n.image ? '<img src="' + esc(n.image) + '" alt="">' : '📰') + '</div><div class="news-body">' +
-            '<span class="badge">' + (String(n.pinned) === 'true' ? '📌 ' : '') + U.thaiDate(n.date, true) + '</span><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p>' +
+            '<span class="badge">' + esc(n.category || 'ข่าวประชาสัมพันธ์') + '</span> <span class="small muted">' + (String(n.pinned) === 'true' ? '📌 ' : '') + U.thaiDate(n.date, true) + '</span><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p>' +
             '<div class="row" style="margin-top:12px"><button class="btn btn-sm" data-edit="' + esc(n.id) + '">แก้ไข</button><button class="btn btn-sm btn-danger" data-del="' + esc(n.id) + '">ลบ</button></div></div></div>';
         }).join('') + '</div>' : '<div class="card empty">ยังไม่มีข่าว</div>');
       var byId = {}; d.news.forEach(function (n) { byId[n.id] = n; });
-      $('nAdd').onclick = function () { editNews({ date: U.todayStr() }); };
+      $('nAdd').onclick = function () { editNews({ date: U.todayStr(), category: NEWS_CATEGORIES[0] }); };
       $('view').querySelectorAll('[data-edit]').forEach(function (b) { b.onclick = function () { editNews(byId[b.dataset.edit]); }; });
       $('view').querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { if (confirm('ลบข่าวนี้?')) api('newsDelete', { id: b.dataset.del }).then(function () { views.news(); }).catch(fail); }; });
     }).catch(fail);
@@ -319,8 +319,10 @@
     openModal('<h3>' + (n.id ? 'แก้ไขข่าว' : 'เพิ่มข่าว') + '</h3><form id="nForm">' +
       '<div class="field"><label>หัวข้อข่าว</label><input name="title" required value="' + esc(n.title || '') + '"></div>' +
       '<div class="field"><label>รายละเอียด</label><textarea name="body" rows="6">' + esc(n.body || '') + '</textarea></div>' +
-      '<div class="grid g2" style="gap:0 14px"><div class="field"><label>วันที่</label><input type="date" name="date" value="' + esc(n.date || '') + '"></div>' +
-      '<div class="field"><label>รูปภาพ</label><input type="file" accept="image/*" id="nFile"></div></div>' +
+      '<div class="grid g2" style="gap:0 14px"><div class="field"><label>หมวด</label><select name="category">' + NEWS_CATEGORIES.map(function (c) { return '<option' + (c === (n.category || NEWS_CATEGORIES[0]) ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field"><label>วันที่</label><input type="date" name="date" value="' + esc(n.date || '') + '"></div></div>' +
+      '<div class="field"><label>รูปภาพ</label><input type="file" accept="image/*" id="nFile"></div>' +
+      '<div class="field"><label>ลิงก์ดูเพิ่มเติม (ไม่บังคับ)</label><input name="link" value="' + esc(n.link || '') + '" placeholder="เช่น ลิงก์โพสต์ Facebook หรืออัลบั้มรูป Google Drive"></div>' +
       '<div class="field"><label>หรือใส่ลิงก์รูปภาพ</label><input name="image" value="' + esc(n.image && n.image.indexOf('data:') !== 0 ? n.image : '') + '" placeholder="https://..."></div>' +
       '<img id="nPrev" style="border-radius:14px;margin-bottom:14px;max-height:200px;object-fit:cover;width:100%' + (n.image ? '' : ';display:none') + '" src="' + esc(n.image || '') + '">' +
       '<label class="row" style="font-weight:400;margin-bottom:18px"><input type="checkbox" name="pinned"' + (String(n.pinned) === 'true' ? ' checked' : '') + '> ปักหมุดไว้ด้านบน</label>' +
@@ -332,50 +334,147 @@
     $('nForm').onsubmit = function (e) {
       e.preventDefault();
       var f = formData(e.target), btn = e.target.querySelector('.btn-primary'); btn.disabled = true;
-      api('newsSave', { news: { id: n.id, title: f.title, body: f.body, date: f.date, pinned: !!f.pinned, image: f.image || (imageData ? '' : n.image) }, imageData: imageData })
+      api('newsSave', { news: { id: n.id, title: f.title, body: f.body, date: f.date, pinned: !!f.pinned, category: f.category, link: f.link, image: f.image || (imageData ? '' : n.image) }, imageData: imageData })
         .then(function () { closeModal(); U.toast('บันทึกข่าวแล้ว', 'ok'); views.news(); }).catch(function (e) { btn.disabled = false; fail(e); });
     };
   }
 
-  // ---------- ตั้งค่า ----------
+  // ---------- ตัวช่วยฟอร์ม ----------
+  function inp(s, k, label, attrs, hint) { return '<div class="field"><label>' + label + '</label><input name="' + k + '" value="' + esc(s[k] || '') + '" ' + (attrs || '') + '>' + (hint ? '<div class="hint">' + hint + '</div>' : '') + '</div>'; }
+  function area(s, k, label, hint, rows) { return '<div class="field"><label>' + label + '</label><textarea name="' + k + '" rows="' + (rows || 3) + '">' + esc(s[k] || '') + '</textarea>' + (hint ? '<div class="hint">' + hint + '</div>' : '') + '</div>'; }
+  function imagePicker(s, k, label, max) {
+    return '<div class="field"><label>' + label + '</label><div class="row" style="flex-wrap:nowrap;align-items:flex-start">' +
+      '<img data-prev="' + k + '" src="' + esc(s[k] || '') + '" style="width:84px;height:84px;object-fit:cover;border-radius:14px;background:var(--purple-50);flex:none' + (s[k] ? '' : ';visibility:hidden') + '">' +
+      '<div style="flex:1;min-width:0"><input name="' + k + '" value="' + esc(s[k] || '') + '" placeholder="ลิงก์รูป https://... หรือเลือกไฟล์ด้านล่าง">' +
+      '<input type="file" accept="image/*" data-upload="' + k + '" data-max="' + (max || 1200) + '" style="margin-top:6px"></div></div></div>';
+  }
+  function bindImagePickers(form) {
+    form.querySelectorAll('[data-upload]').forEach(function (fi) {
+      fi.onchange = function () {
+        if (!fi.files[0]) return;
+        var k = fi.dataset.upload, prev = form.querySelector('[data-prev="' + k + '"]');
+        U.toast('กำลังอัปโหลดรูป...');
+        U.resizeImage(fi.files[0], +fi.dataset.max, 0.82).then(function (data) { return api('uploadImage', { imageData: data, name: k }); })
+          .then(function (r) { form[k].value = r.url; prev.src = r.url; prev.style.visibility = ''; U.toast('อัปโหลดแล้ว อย่าลืมกดบันทึก', 'ok'); })
+          .catch(fail);
+      };
+    });
+  }
+  function collect(form) {
+    var out = {};
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (el.name && el.type !== 'file') out[el.name] = el.value.trim();
+      if (el.dataset.toggle) out[el.dataset.toggle] = el.checked ? 'on' : 'off';
+    });
+    return out;
+  }
+
+  // ---------- ข้อมูลเว็บไซต์ ----------
+  views.site = function () {
+    api('settingsGet').then(function (s) {
+      S = s;
+      $('view').innerHTML = head('ข้อมูลเว็บไซต์', '<a class="btn" href="index.html" target="_blank">ดูหน้าเว็บ</a><button class="btn btn-primary" id="wSave">บันทึก</button>') +
+        '<p class="muted small" style="margin-top:-8px">ข้อมูลในหน้านี้แสดงบนหน้าเว็บโรงเรียน หัวข้อไหนเว้นว่างไว้จะไม่แสดง</p><form id="wForm" class="grid" style="gap:16px">' +
+        '<div class="card"><h3>📢 ประกาศ (ข้อความวิ่งด้านบนเว็บ)</h3>' + inp(s, 'announcement', 'ข้อความประกาศ', 'placeholder="เช่น รับสมัครนักเรียนใหม่ ปีการศึกษา 2570 ตั้งแต่วันที่ ..."', 'เว้นว่าง = ไม่แสดงแถบประกาศ') + '</div>' +
+        '<div class="card"><h3>👤 ผู้บริหาร</h3><div class="grid g2" style="gap:0 14px">' + inp(s, 'directorName', 'ชื่อผู้อำนวยการ', '', 'ใช้ในช่องลงนามของรายงาน Word ด้วย') + inp(s, 'directorTitle', 'ตำแหน่ง') + '</div>' +
+        imagePicker(s, 'directorPhoto', 'รูปผู้อำนวยการ', 600) + area(s, 'directorMessage', 'สารจากผู้อำนวยการ', '', 4) + '</div>' +
+        '<div class="card"><h3>🏫 ข้อมูลทั่วไป</h3><div class="grid g2" style="gap:0 14px">' +
+        inp(s, 'schoolName', 'ชื่อโรงเรียน') + inp(s, 'schoolNameEn', 'ชื่อภาษาอังกฤษ') + inp(s, 'affiliation', 'สังกัด') + inp(s, 'motto', 'ปรัชญา / คำขวัญ') +
+        inp(s, 'studentsCount', 'จำนวนนักเรียน', 'type="number"') + inp(s, 'classesCount', 'จำนวนระดับชั้น', 'type="number"') + inp(s, 'founded', 'ปีที่ก่อตั้ง (พ.ศ.)') + inp(s, 'schoolColors', 'สีประจำโรงเรียน') + '</div>' +
+        area(s, 'about', 'คำแนะนำโรงเรียน (ย่อหน้าสั้น ๆ)', '', 3) + '</div>' +
+        '<div class="card"><h3>📘 ข้อมูลพื้นฐาน</h3>' + area(s, 'history', 'ประวัติโรงเรียน', '', 5) + area(s, 'vision', 'วิสัยทัศน์', '', 3) + area(s, 'mission', 'พันธกิจ', 'ขึ้นบรรทัดใหม่ได้ตามต้องการ', 5) +
+        area(s, 'goals', 'เป้าประสงค์', '', 4) + '<div class="grid g2" style="gap:0 14px">' + area(s, 'identity', 'อัตลักษณ์', '', 2) + area(s, 'uniqueness', 'เอกลักษณ์', '', 2) + '</div></div>' +
+        '<div class="card"><h3>☎️ ติดต่อ</h3><div class="grid g2" style="gap:0 14px">' + inp(s, 'phone', 'โทรศัพท์') + inp(s, 'email', 'อีเมล') + inp(s, 'facebook', 'ลิงก์เพจ Facebook') + inp(s, 'mapUrl', 'ลิงก์ Google Maps') +
+        inp(s, 'address', 'ที่อยู่') + inp(s, 'oitUrl', 'ลิงก์หน้า ITA / OIT', '', 'แสดงเป็นเมนู ITA / OIT') + '</div></div>' +
+        '<div class="card"><h3>🖼️ รูปภาพ</h3><div class="grid g2" style="gap:0 14px">' + imagePicker(s, 'logoUrl', 'โลโก้ (เว้นว่าง = ใช้ตราโรงเรียนเดิม)', 512) + imagePicker(s, 'heroImage', 'ภาพพื้นหลังหน้าแรก (เช่น รูปอาคารเรียน)', 1600) + '</div></div>' +
+        '</form>';
+      bindImagePickers($('wForm'));
+      $('wSave').onclick = function () {
+        api('settingsSave', { settings: collect($('wForm')) }).then(function () { U.toast('บันทึกแล้ว', 'ok'); }).catch(fail);
+      };
+    }).catch(fail);
+  };
+
+  // ---------- ปฏิทินกิจกรรม ----------
+  views.events = function () {
+    API.call('getPublic').then(function (d) {
+      var list = (d.events || []).slice().reverse();
+      $('view').innerHTML = head('ปฏิทินกิจกรรม', '<button class="btn btn-primary" id="evAdd">+ เพิ่มกิจกรรม</button>') +
+        '<p class="muted small" style="margin-top:-8px">กิจกรรมที่ยังไม่ผ่านจะแสดงบนหน้าเว็บ (สูงสุด 6 รายการถัดไป)</p>' +
+        (list.length ? '<div class="table-wrap"><table><thead><tr><th>วันที่</th><th>กิจกรรม</th><th>เวลา / สถานที่</th><th></th></tr></thead><tbody>' + list.map(function (e) {
+          return '<tr><td style="white-space:nowrap">' + U.thaiDate(e.date, true) + (e.dateEnd ? ' – ' + U.thaiDate(e.dateEnd, true) : '') + '</td><td><b>' + esc(e.title) + '</b><div class="small muted">' + esc(e.detail) + '</div></td><td class="small">' + esc([e.time, e.place].filter(String).join(' · ')) + '</td>' +
+            '<td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn btn-sm" data-edit="' + esc(e.id) + '">แก้ไข</button><button class="btn btn-sm btn-danger" data-del="' + esc(e.id) + '">ลบ</button></div></td></tr>';
+        }).join('') + '</tbody></table></div>' : '<div class="card empty">ยังไม่มีกิจกรรม</div>');
+      var byId = {}; list.forEach(function (e) { byId[e.id] = e; });
+      $('evAdd').onclick = function () { editEvent({ date: U.todayStr() }); };
+      $('view').querySelectorAll('[data-edit]').forEach(function (b) { b.onclick = function () { editEvent(byId[b.dataset.edit]); }; });
+      $('view').querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { if (confirm('ลบกิจกรรมนี้?')) api('eventDelete', { id: b.dataset.del }).then(function () { views.events(); }).catch(fail); }; });
+    }).catch(fail);
+  };
+  function editEvent(e) {
+    openModal('<h3>' + (e.id ? 'แก้ไขกิจกรรม' : 'เพิ่มกิจกรรม') + '</h3><form id="evForm">' +
+      '<div class="field"><label>ชื่อกิจกรรม</label><input name="title" required value="' + esc(e.title || '') + '"></div>' +
+      '<div class="grid g2" style="gap:0 14px"><div class="field"><label>วันที่</label><input type="date" name="date" required value="' + esc(e.date || '') + '"></div>' +
+      '<div class="field"><label>ถึงวันที่ (ถ้ามีหลายวัน)</label><input type="date" name="dateEnd" value="' + esc(e.dateEnd || '') + '"></div>' +
+      '<div class="field"><label>เวลา</label><input name="time" value="' + esc(e.time || '') + '" placeholder="เช่น 09:00 น."></div>' +
+      '<div class="field"><label>สถานที่</label><input name="place" value="' + esc(e.place || '') + '"></div></div>' +
+      '<div class="field"><label>รายละเอียด</label><input name="detail" value="' + esc(e.detail || '') + '"></div>' +
+      '<div class="row"><span class="spacer"></span><button type="button" class="btn" data-close>ยกเลิก</button><button class="btn btn-primary">บันทึก</button></div></form>');
+    $('evForm').onsubmit = function (ev) {
+      ev.preventDefault();
+      api('eventSave', { event: Object.assign({ id: e.id }, formData(ev.target)) }).then(function () { closeModal(); U.toast('บันทึกแล้ว', 'ok'); views.events(); }).catch(fail);
+    };
+  }
+
+  // ---------- ลิงก์ / เอกสาร ----------
+  views.links = function () {
+    API.call('getPublic').then(function (d) {
+      var list = d.links || [], cats = d.linkCategories || [];
+      $('view').innerHTML = head('ลิงก์ / เอกสาร', '<button class="btn btn-primary" id="lkAdd">+ เพิ่มลิงก์</button>') +
+        '<p class="muted small" style="margin-top:-8px">ลิงก์หน่วยงาน เอกสารดาวน์โหลด (เช่น ลิงก์ Google Drive) และบริการออนไลน์ แสดงในส่วน “บริการและลิงก์” ของหน้าเว็บ</p>' +
+        (list.length ? '<div class="table-wrap"><table><thead><tr><th>ลำดับ</th><th>ชื่อ</th><th>หมวด</th><th></th></tr></thead><tbody>' + list.map(function (l) {
+          return '<tr><td>' + esc(l.order) + '</td><td><a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.title) + '</a></td><td><span class="badge">' + esc(l.category) + '</span></td>' +
+            '<td><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn btn-sm" data-edit="' + esc(l.id) + '">แก้ไข</button><button class="btn btn-sm btn-danger" data-del="' + esc(l.id) + '">ลบ</button></div></td></tr>';
+        }).join('') + '</tbody></table></div>' : '<div class="card empty">ยังไม่มีลิงก์</div>');
+      var byId = {}; list.forEach(function (l) { byId[l.id] = l; });
+      function edit(l) {
+        openModal('<h3>' + (l.id ? 'แก้ไขลิงก์' : 'เพิ่มลิงก์') + '</h3><form id="lkForm">' +
+          '<div class="field"><label>ชื่อที่แสดง</label><input name="title" required value="' + esc(l.title || '') + '"></div>' +
+          '<div class="field"><label>ลิงก์ (URL)</label><input name="url" required value="' + esc(l.url || '') + '" placeholder="https://..."></div>' +
+          '<div class="grid g2" style="gap:0 14px"><div class="field"><label>หมวด</label><select name="category">' + cats.map(function (c) { return '<option' + (c === l.category ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></div>' +
+          '<div class="field"><label>ลำดับ</label><input type="number" name="order" value="' + esc(l.order || '') + '"></div></div>' +
+          '<div class="row"><span class="spacer"></span><button type="button" class="btn" data-close>ยกเลิก</button><button class="btn btn-primary">บันทึก</button></div></form>');
+        $('lkForm').onsubmit = function (ev) {
+          ev.preventDefault();
+          api('linkSave', { link: Object.assign({ id: l.id }, formData(ev.target)) }).then(function () { closeModal(); U.toast('บันทึกแล้ว', 'ok'); views.links(); }).catch(fail);
+        };
+      }
+      $('lkAdd').onclick = function () { edit({ category: cats[0] }); };
+      $('view').querySelectorAll('[data-edit]').forEach(function (b) { b.onclick = function () { edit(byId[b.dataset.edit]); }; });
+      $('view').querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { if (confirm('ลบลิงก์นี้?')) api('linkDelete', { id: b.dataset.del }).then(function () { views.links(); }).catch(fail); }; });
+    }).catch(fail);
+  };
+
+  // ---------- ตั้งค่าระบบลงเวลา ----------
   views.settings = function () {
     api('settingsGet').then(function (s) {
       S = s;
-      var inp = function (k, label, attrs, hint) { return '<div class="field"><label>' + label + '</label><input name="' + k + '" value="' + esc(s[k]) + '" ' + (attrs || '') + '>' + (hint ? '<div class="hint">' + hint + '</div>' : '') + '</div>'; };
-      var area = function (k, label, hint, rows) { return '<div class="field"><label>' + label + '</label><textarea name="' + k + '" rows="' + (rows || 3) + '">' + esc(s[k]) + '</textarea>' + (hint ? '<div class="hint">' + hint + '</div>' : '') + '</div>'; };
       var toggle = function (k, label) { return '<label class="row" style="font-weight:400;margin-bottom:12px"><input type="checkbox" data-toggle="' + k + '"' + (s[k] === 'on' ? ' checked' : '') + '> ' + label + '</label>'; };
-      var lineLog = '';
-      if (U.DEMO) { try { lineLog = (JSON.parse(localStorage.getItem('tkp_linelog') || '[]')).slice(0, 5).map(function (l) { return '<div class="card small" style="white-space:pre-line;padding:12px;margin-top:8px;background:#f2fbf5">' + esc(l.text) + '</div>'; }).join(''); } catch (e) { } }
-      $('view').innerHTML = head('ตั้งค่าระบบ', '<button class="btn btn-primary" id="sSave">บันทึกการตั้งค่า</button>') + '<form id="sForm" class="grid" style="gap:16px">' +
-        '<div class="card"><h3>📍 พิกัดโรงเรียน (GPS)</h3><p class="muted small">ครูลงเวลาได้เฉพาะเมื่ออยู่ในรัศมีที่กำหนดจากจุดนี้ แนะนำให้ไปยืนกลางโรงเรียนแล้วกด “ใช้ตำแหน่งปัจจุบัน”</p>' +
-        '<div class="grid g3" style="gap:0 14px">' + inp('lat', 'ละติจูด', 'inputmode="decimal" placeholder="เช่น 19.3xxxxx"') + inp('lng', 'ลองจิจูด', 'inputmode="decimal" placeholder="เช่น 98.9xxxxx"') + inp('radius', 'รัศมีที่อนุญาต (เมตร)', 'type="number" min="30"') + '</div>' +
+      $('view').innerHTML = head('ตั้งค่าระบบลงเวลา', '<button class="btn btn-primary" id="sSave">บันทึกการตั้งค่า</button>') + '<form id="sForm" class="grid" style="gap:16px">' +
+        '<div class="card"><h3>📍 พิกัดโรงเรียน (GPS)</h3><p class="muted small">ครูลงเวลาได้เฉพาะเมื่ออยู่ในรัศมีที่กำหนดจากจุดนี้ ถ้าจุดยังไม่ตรงกลางโรงเรียน ให้ไปยืนกลางโรงเรียนแล้วกด “ใช้ตำแหน่งปัจจุบัน”</p>' +
+        '<div class="grid g3" style="gap:0 14px">' + inp(s, 'lat', 'ละติจูด', 'inputmode="decimal"') + inp(s, 'lng', 'ลองจิจูด', 'inputmode="decimal"') + inp(s, 'radius', 'รัศมีที่อนุญาต (เมตร)', 'type="number" min="30"') + '</div>' +
         '<div class="row"><button type="button" class="btn btn-gold" id="sHere">📍 ใช้ตำแหน่งปัจจุบัน</button><span class="small muted" id="sHereInfo"></span></div>' +
         '<div id="sMap" style="margin-top:14px"></div>' +
-        '<div class="grid g3" style="gap:0 14px;margin-top:10px">' + inp('gpsMaxAccuracy', 'ความคลาดเคลื่อน GPS สูงสุด (เมตร)', 'type="number" min="10"', 'ถ้าสัญญาณแย่กว่านี้จะให้ลองใหม่') + '</div></div>' +
+        '<div class="grid g3" style="gap:0 14px;margin-top:10px">' + inp(s, 'gpsMaxAccuracy', 'ความคลาดเคลื่อน GPS สูงสุด (เมตร)', 'type="number" min="10"', 'ถ้าสัญญาณแย่กว่านี้จะให้ลองใหม่') + '</div></div>' +
 
-        '<div class="card"><h3>🕘 เวลาปฏิบัติราชการ</h3><div class="grid g3" style="gap:0 14px">' + inp('workStart', 'เวลาเข้างาน (หลังจากนี้ = สาย)', 'type="time"') + inp('workEnd', 'เวลาเลิกงาน', 'type="time"') + '</div>' +
-        area('holidays', 'วันหยุดราชการ / วันหยุดโรงเรียน', 'บรรทัดละ 1 วัน รูปแบบ ปปปป-ดด-วว ตามด้วยชื่อวันหยุด (ค.ศ.) เช่น 2026-12-05 วันพ่อแห่งชาติ · เสาร์-อาทิตย์เป็นวันหยุดอัตโนมัติ', 5) + '</div>' +
+        '<div class="card"><h3>🕘 เวลาปฏิบัติราชการ</h3><div class="grid g3" style="gap:0 14px">' + inp(s, 'workStart', 'เวลาเข้างาน (หลังจากนี้ = สาย)', 'type="time"') + inp(s, 'workEnd', 'เวลาเลิกงาน', 'type="time"') + '</div>' +
+        area(s, 'holidays', 'วันหยุดราชการ / วันหยุดโรงเรียน', 'บรรทัดละ 1 วัน รูปแบบ ปปปป-ดด-วว (ปี ค.ศ.) ตามด้วยชื่อวันหยุด เช่น 2026-12-05 วันพ่อแห่งชาติ · เสาร์-อาทิตย์เป็นวันหยุดอัตโนมัติ', 5) + '</div>' +
 
         '<div class="card"><h3>🙂 การสแกนใบหน้า</h3>' + toggle('liveness', 'ตรวจการกระพริบตา (ป้องกันการใช้รูปถ่ายมาสแกน)') +
-        '<div class="grid g3" style="gap:0 14px">' + inp('faceThreshold', 'ความเข้มงวดการจับคู่ใบหน้า', 'type="number" step="0.01" min="0.3" max="0.7"', 'ค่าน้อย = เข้มงวดขึ้น (แนะนำ 0.45–0.55)') + '</div></div>' +
-
-        '<div class="card"><h3>💬 แจ้งเตือน LINE</h3><p class="muted small">ใช้ LINE Official Account (Messaging API) ฟรี — ดูวิธีตั้งค่าใน “คู่มือติดตั้ง.md” แล้วเชิญบอทเข้ากลุ่ม LINE ครู พิมพ์ <b>ลงทะเบียนแจ้งเตือน</b> ในกลุ่ม</p>' +
-        toggle('lineLeave', 'แจ้งเมื่อมีคำขอลา และเมื่ออนุมัติ/ไม่อนุมัติ') + toggle('lineDaily', 'ส่งสรุปการลงเวลาประจำวันอัตโนมัติ') +
-        '<div class="grid g3" style="gap:0 14px">' + inp('lineDailyTime', 'เวลาส่งสรุปประจำวัน', 'type="time"', 'ตั้งได้เฉพาะชั่วโมง ระบบจะส่งในชั่วโมงนั้น') + '</div>' +
-        toggle('lineEachCheckin', 'แจ้งทุกครั้งที่ครูลงเวลา (ใช้โควตาข้อความมาก ไม่แนะนำ)') +
-        '<div class="row"><button type="button" class="btn" id="sLineTest">ส่งข้อความทดสอบ</button><button type="button" class="btn" id="sLineDaily">ส่งสรุปวันนี้ทันที</button></div>' + lineLog + '</div>' +
-
-        '<div class="card"><h3>🏫 ข้อมูลโรงเรียน (แสดงบนหน้าเว็บ)</h3><div class="grid g2" style="gap:0 14px">' +
-        inp('schoolName', 'ชื่อโรงเรียน') + inp('schoolNameEn', 'ชื่อภาษาอังกฤษ') + inp('affiliation', 'สังกัด') + inp('motto', 'คำขวัญ / ปรัชญา') +
-        inp('directorName', 'ชื่อผู้อำนวยการ', '', 'ใช้ในช่องลงนามของรายงาน') + inp('directorTitle', 'ตำแหน่งผู้ลงนาม') +
-        inp('phone', 'โทรศัพท์') + inp('email', 'อีเมล') + inp('facebook', 'ลิงก์เพจ Facebook') + inp('address', 'ที่อยู่') +
-        inp('studentsCount', 'จำนวนนักเรียน', 'type="number"') + inp('classesCount', 'จำนวนระดับชั้น', 'type="number"') +
-        inp('logoUrl', 'โลโก้โรงเรียน (ลิงก์รูป)', '', 'หรือเลือกไฟล์ด้านล่าง') + inp('heroImage', 'ภาพพื้นหลังหน้าแรก (ลิงก์รูป)') + '</div>' +
-        '<div class="field"><label>อัปโหลดโลโก้</label><input type="file" accept="image/*" id="sLogo"></div>' +
-        area('about', 'เกี่ยวกับโรงเรียน', '', 4) + area('vision', 'วิสัยทัศน์', '', 3) + '</div>' +
+        '<div class="grid g3" style="gap:0 14px">' + inp(s, 'faceThreshold', 'ความเข้มงวดการจับคู่ใบหน้า', 'type="number" step="0.01" min="0.3" max="0.7"', 'ค่าน้อย = เข้มงวดขึ้น (แนะนำ 0.45–0.55)') + '</div></div>' +
 
         '<div class="card"><h3>🔒 เปลี่ยนรหัสผ่านผู้ดูแล</h3><div class="grid g3" style="gap:0 14px"><div class="field"><label>รหัสผ่านใหม่</label><input type="password" id="sNewPw" autocomplete="new-password" placeholder="อย่างน้อย 6 ตัวอักษร"></div></div>' +
-        (U.DEMO ? '' : '<p class="small muted">หลังเปลี่ยนรหัสต้องเข้าสู่ระบบใหม่</p>') + '</div>' +
+        '<p class="small muted">รหัสผ่านนี้ใช้เข้าหน้าผู้ดูแลทั้งหมด ควรบอกเฉพาะผู้บริหารหรือผู้ที่ได้รับมอบหมาย</p></div>' +
         '</form>';
 
       function drawMap() {
@@ -391,19 +490,9 @@
           $('sHereInfo').textContent = 'ได้ตำแหน่งแล้ว (±' + Math.round(p.accuracy) + ' ม.) อย่าลืมกดบันทึก'; drawMap();
         }).catch(function (e) { $('sHereInfo').textContent = e.message; });
       };
-      $('sLogo').onchange = function () {
-        if (this.files[0]) U.resizeImage(this.files[0], 256, 0.85).then(function (url) { $('sForm').logoUrl.value = url; U.toast('เลือกโลโก้แล้ว กดบันทึกเพื่อใช้งาน'); });
-      };
-      $('sLineTest').onclick = function () { api('lineTest').then(function () { U.toast('ส่งข้อความทดสอบแล้ว', 'ok'); }).catch(fail); };
-      $('sLineDaily').onclick = function () { api('lineDailyNow').then(function () { U.toast('ส่งสรุปแล้ว', 'ok'); }).catch(fail); };
       $('sSave').onclick = function () {
-        var f = $('sForm'), out = {};
-        Array.prototype.forEach.call(f.elements, function (el) {
-          if (el.name) out[el.name] = el.value.trim();
-          if (el.dataset.toggle) out[el.dataset.toggle] = el.checked ? 'on' : 'off';
-        });
         var pw = $('sNewPw').value;
-        api('settingsSave', { settings: out, newPassword: pw || undefined }).then(function () {
+        api('settingsSave', { settings: collect($('sForm')), newPassword: pw || undefined }).then(function () {
           U.toast('บันทึกการตั้งค่าแล้ว', 'ok');
           if (pw) { PW = pw; try { sessionStorage.setItem('tkp_pw', pw); } catch (e) { } }
           views.settings();

@@ -38,6 +38,12 @@
     saveImage: function (dataUrl) { return dataUrl; }
   };
 
+  var DEFAULT_LINKS = [
+    { id: 'k1', title: 'สำนักงานคณะกรรมการการศึกษาขั้นพื้นฐาน (สพฐ.)', url: 'https://www.obec.go.th', category: 'ลิงก์หน่วยงาน', order: '1' },
+    { id: 'k2', title: 'สพป.เชียงใหม่ เขต 3', url: 'https://cmarea3.go.th', category: 'ลิงก์หน่วยงาน', order: '2' },
+    { id: 'k3', title: 'กระทรวงศึกษาธิการ', url: 'https://www.moe.go.th', category: 'ลิงก์หน่วยงาน', order: '3' }
+  ];
+
   function seedDemo(core) {
     if (store('seeded')) return;
     var names = [
@@ -71,7 +77,11 @@
       { id: 'n2', title: 'กิจกรรมวันลอยกระทง', body: 'นักเรียนร่วมกันประดิษฐ์กระทงจากวัสดุธรรมชาติ สืบสานประเพณีไทย และรักษาสิ่งแวดล้อม', image: '', date: today, pinned: 'false' },
       { id: 'n3', title: 'ประชุมผู้ปกครองนักเรียน', body: 'ขอเชิญผู้ปกครองร่วมประชุมเพื่อรับฟังแนวทางการพัฒนาผู้เรียนและร่วมแลกเปลี่ยนความคิดเห็น', image: '', date: today, pinned: 'false' }
     ]);
-    store('settings', { studentsCount: '120' });
+    store('t_events', [
+      { id: 'e1', title: 'ประชุมผู้ปกครองนักเรียน (ตัวอย่าง)', date: today, dateEnd: '', time: '09:00 น.', place: 'หอประชุมโรงเรียน', detail: '' }
+    ]);
+    store('t_links', DEFAULT_LINKS);
+    store('settings', { studentsCount: '120', announcement: 'ยินดีต้อนรับสู่เว็บไซต์โรงเรียนบ้านทุ่งข้าวพวง (ข้อความประกาศตัวอย่าง แก้ไขได้ที่หน้าผู้ดูแล)' });
     store('seeded', true);
   }
 
@@ -148,15 +158,8 @@
     demoReset: function () { Object.keys(localStorage).filter(function (k) { return k.indexOf('tkp_') === 0; }).forEach(function (k) { localStorage.removeItem(k); }); location.reload(); }
   };
 
-  // โลโก้เริ่มต้น (รวงข้าวสีทองในวงกลมสีม่วง) ใช้เมื่อยังไม่ได้ตั้งค่าโลโก้
-  util.defaultLogo = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7b3fb5"/><stop offset="1" stop-color="#4a1d73"/></linearGradient></defs>' +
-    '<circle cx="50" cy="50" r="48" fill="url(#g)"/><circle cx="50" cy="50" r="41" fill="none" stroke="#f6c945" stroke-width="2.5"/>' +
-    '<path d="M50 82 C50 62 50 45 52 24" stroke="#f6c945" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-    [[52, 26, -30], [50, 34, 30], [53, 40, -30], [50, 48, 30], [53, 54, -30], [50, 61, 30]].map(function (g) {
-      return '<ellipse cx="' + (g[0] + (g[2] < 0 ? 6 : -6)) + '" cy="' + g[1] + '" rx="7" ry="3.6" fill="#f6c945" transform="rotate(' + g[2] + ' ' + (g[0] + (g[2] < 0 ? 6 : -6)) + ' ' + g[1] + ')"/>';
-    }).join('') +
-    '<path d="M30 74 Q50 66 70 74" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>');
+  // โลโก้โรงเรียน (ใช้เมื่อยังไม่ได้ตั้งค่าโลโก้อื่น)
+  util.defaultLogo = 'assets/logo.png';
 
   window.API = { call: call };
   window.U = util;

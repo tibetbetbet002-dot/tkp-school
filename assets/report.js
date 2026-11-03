@@ -2,17 +2,19 @@
 (function () {
   var DOCX_URL = 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js';
   var FONT = 'TH SarabunPSK';
-  var loading = null;
+  var loading = null, LOGO = null;
   function loadDocx() {
-    if (window.docx) return Promise.resolve(window.docx);
+    if (!LOGO) LOGO = fetch('assets/logo-192.png').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).catch(function () { return null; });
+    if (window.docx) return LOGO.then(function (b) { LOGO_DATA = b; return window.docx; });
     if (!loading) loading = new Promise(function (resolve, reject) {
       var s = document.createElement('script'); s.src = DOCX_URL;
       s.onload = function () { resolve(window.docx); };
       s.onerror = function () { loading = null; reject(new Error('โหลดตัวสร้างไฟล์ Word ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต')); };
       document.head.appendChild(s);
     });
-    return loading;
+    return Promise.all([loading, LOGO]).then(function (r) { LOGO_DATA = r[1]; return r[0]; });
   }
+  var LOGO_DATA = null;
 
   function build(d, opts) {
     var A = d.AlignmentType;
@@ -41,7 +43,11 @@
           }))
       });
     }
-    return { P: P, cell: cell, table: table, A: A };
+    function logo() {
+      if (!LOGO_DATA) return [];
+      return [new d.Paragraph({ alignment: A.CENTER, children: [new d.ImageRun({ data: LOGO_DATA, transformation: { width: 64, height: 64 } })] })];
+    }
+    return { P: P, cell: cell, table: table, A: A, logo: logo };
   }
 
   function signature(h, s) {
@@ -55,11 +61,11 @@
     ];
   }
   function header(h, s, title, sub) {
-    return [
+    return h.logo().concat([
       h.P(title, { align: h.A.CENTER, bold: true, size: 20 }),
       h.P(s.schoolName + (s.affiliation ? '  ' + s.affiliation : ''), { align: h.A.CENTER, size: 16 }),
       h.P(sub, { align: h.A.CENTER, size: 16, after: 200 })
-    ];
+    ]);
   }
   async function save(d, sections, filename) {
     var doc = new d.Document({

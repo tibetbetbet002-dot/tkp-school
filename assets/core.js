@@ -11,21 +11,32 @@ var CORE_DEFAULT_SETTINGS = {
   schoolNameEn: 'Ban Thung Khao Phuang School',
   motto: 'เรียนดี มีวินัย ใฝ่คุณธรรม',
   vision: 'มุ่งพัฒนาผู้เรียนให้มีความรู้คู่คุณธรรม มีทักษะการเรียนรู้ในศตวรรษที่ 21 ภูมิใจในท้องถิ่น และดำรงชีวิตตามหลักปรัชญาของเศรษฐกิจพอเพียง',
+  mission: '1. จัดการศึกษาให้ผู้เรียนมีคุณภาพตามมาตรฐานการศึกษา\n2. ส่งเสริมให้ผู้เรียนมีคุณธรรม จริยธรรม และค่านิยมที่พึงประสงค์\n3. พัฒนาครูและบุคลากรให้มีความรู้ความสามารถในการจัดการเรียนรู้\n4. บริหารจัดการโดยการมีส่วนร่วมของชุมชนและภาคีเครือข่าย\n5. ส่งเสริมการเรียนรู้ตามหลักปรัชญาของเศรษฐกิจพอเพียงและภูมิปัญญาท้องถิ่น',
+  goals: '',
+  identity: '',
+  uniqueness: '',
+  schoolColors: 'ม่วง - เหลือง - ขาว',
+  history: '',
   about: 'โรงเรียนบ้านทุ่งข้าวพวงเป็นโรงเรียนประถมศึกษาที่อยู่คู่ชุมชน จัดการศึกษาตั้งแต่ระดับปฐมวัยถึงประถมศึกษาปีที่ 6 โดยร่วมมือกับผู้ปกครองและชุมชนในการพัฒนาผู้เรียนอย่างรอบด้าน',
-  address: 'ตำบลทุ่งข้าวพวง อำเภอเชียงดาว จังหวัดเชียงใหม่',
-  affiliation: 'สังกัดสำนักงานเขตพื้นที่การศึกษาประถมศึกษา',
+  address: 'ตำบลทุ่งข้าวพวง อำเภอเชียงดาว จังหวัดเชียงใหม่ 50170',
+  affiliation: 'สังกัดสำนักงานเขตพื้นที่การศึกษาประถมศึกษาเชียงใหม่ เขต 3',
   phone: '',
   email: '',
-  facebook: '',
+  facebook: 'https://www.facebook.com/BanThungKhaoPhuang.school',
+  mapUrl: 'https://maps.app.goo.gl/VvBob9aD36QCa1oY9',
+  oitUrl: 'https://sites.google.com/pracharath.ac.th/tkpsc/',
+  announcement: '',
   directorName: '',
   directorTitle: 'ผู้อำนวยการโรงเรียนบ้านทุ่งข้าวพวง',
+  directorPhoto: '',
+  directorMessage: '',
   studentsCount: '',
   classesCount: '8',
   founded: '',
   logoUrl: '',
   heroImage: '',
-  lat: '',
-  lng: '',
+  lat: '19.554926',
+  lng: '98.958191',
   radius: '200',
   gpsMaxAccuracy: '150',
   workStart: '08:00',
@@ -33,18 +44,21 @@ var CORE_DEFAULT_SETTINGS = {
   faceThreshold: '0.5',
   liveness: 'on',
   lineEachCheckin: 'off',
-  lineLeave: 'on',
-  lineDaily: 'on',
+  lineLeave: 'off',
+  lineDaily: 'off',
   lineDailyTime: '08:30',
   holidays: '',
   adminPassword: 'admin1234'
 };
 
-var CORE_PUBLIC_KEYS = ['schoolName', 'schoolNameEn', 'motto', 'vision', 'about', 'address', 'affiliation', 'phone', 'email',
-  'facebook', 'directorName', 'directorTitle', 'studentsCount', 'classesCount', 'founded', 'logoUrl', 'heroImage',
+var CORE_PUBLIC_KEYS = ['schoolName', 'schoolNameEn', 'motto', 'vision', 'mission', 'goals', 'identity', 'uniqueness', 'schoolColors', 'history',
+  'about', 'address', 'affiliation', 'phone', 'email', 'facebook', 'mapUrl', 'oitUrl', 'announcement',
+  'directorName', 'directorTitle', 'directorPhoto', 'directorMessage', 'studentsCount', 'classesCount', 'founded', 'logoUrl', 'heroImage',
   'lat', 'lng', 'radius', 'gpsMaxAccuracy', 'workStart', 'workEnd', 'liveness', 'holidays'];
 
 var LEAVE_TYPES = ['ลาป่วย', 'ลากิจส่วนตัว', 'ลาพักผ่อน', 'ลาคลอดบุตร', 'ไปราชการ', 'อื่นๆ'];
+var NEWS_CATEGORIES = ['ข่าวประชาสัมพันธ์', 'กิจกรรม', 'ประกาศ', 'ผลงาน/รางวัล'];
+var LINK_CATEGORIES = ['ลิงก์หน่วยงาน', 'เอกสารดาวน์โหลด', 'บริการออนไลน์'];
 
 function createCore(db, env) {
   var TZ_MS = 7 * 3600 * 1000; // เวลาประเทศไทย UTC+7
@@ -284,7 +298,10 @@ function createCore(db, env) {
       return String(b.date).localeCompare(String(a.date));
     }).slice(0, 30);
     var staff = teachers().map(function (t) { return { id: t.id, name: t.name, position: t.position, photo: t.photo || '', hasFace: parseFaces(t).length > 0 }; });
-    return { settings: pub, news: news, staff: staff, leaveTypes: LEAVE_TYPES, today: nowBkk() };
+    var events = db.rows('events').sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+    var links = db.rows('links').sort(function (a, b) { return (Number(a.order) || 999) - (Number(b.order) || 999); });
+    return { settings: pub, news: news, staff: staff, events: events, links: links, leaveTypes: LEAVE_TYPES,
+      newsCategories: NEWS_CATEGORIES, linkCategories: LINK_CATEGORIES, today: nowBkk() };
   }
 
   // ---------- ผู้ดูแล ----------
@@ -356,11 +373,32 @@ function createCore(db, env) {
       var old = n.id ? db.rows('news').filter(function (x) { return x.id === n.id; })[0] : null;
       var image = n.image || '';
       if (req.imageData && env.saveImage) image = env.saveImage(req.imageData, n.title);
-      var item = { id: old ? old.id : uid(), title: n.title, body: n.body || '', image: image, date: n.date || nowBkk().date, pinned: n.pinned ? 'true' : 'false' };
+      var item = { id: old ? old.id : uid(), title: n.title, body: n.body || '', image: image, date: n.date || nowBkk().date, pinned: n.pinned ? 'true' : 'false',
+        category: NEWS_CATEGORIES.indexOf(n.category) >= 0 ? n.category : NEWS_CATEGORIES[0], link: n.link || '' };
       if (old) db.put('news', 'id', item); else db.add('news', item);
       return item;
     },
     newsDelete: function (req) { db.del('news', 'id', req.id); return { ok: true }; },
+    eventSave: function (req) {
+      var e = req.event || {};
+      if (!e.title || !e.date) fail('กรุณากรอกชื่อกิจกรรมและวันที่');
+      var item = { id: e.id || uid(), title: e.title, date: e.date, dateEnd: e.dateEnd && e.dateEnd >= e.date ? e.dateEnd : '', time: e.time || '', place: e.place || '', detail: e.detail || '' };
+      if (e.id) db.put('events', 'id', item); else db.add('events', item);
+      return item;
+    },
+    eventDelete: function (req) { db.del('events', 'id', req.id); return { ok: true }; },
+    linkSave: function (req) {
+      var l = req.link || {};
+      if (!l.title || !l.url) fail('กรุณากรอกชื่อและลิงก์');
+      var item = { id: l.id || uid(), title: l.title, url: l.url, category: LINK_CATEGORIES.indexOf(l.category) >= 0 ? l.category : LINK_CATEGORIES[0], order: l.order || String(db.rows('links').length + 1) };
+      if (l.id) db.put('links', 'id', item); else db.add('links', item);
+      return item;
+    },
+    linkDelete: function (req) { db.del('links', 'id', req.id); return { ok: true }; },
+    uploadImage: function (req) {
+      if (!req.imageData || !env.saveImage) fail('ไม่มีรูปภาพ');
+      return { url: env.saveImage(req.imageData, req.name || 'image') };
+    },
     settingsGet: function () { var s = settings(); delete s.adminPassword; return s; },
     settingsSave: function (req) {
       var cur = db.settings() || {}, inc = req.settings || {};
