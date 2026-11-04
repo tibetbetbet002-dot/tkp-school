@@ -24,8 +24,8 @@
     <span class="spacer"></span>
     <span id="topPhone" class="hidden"></span>
     <a id="topFb" class="hidden" target="_blank" rel="noopener">Facebook</a>
-    <a href="checkin.html">🕘 ระบบลงเวลาครู</a>
-    <a href="admin.html">🔒 เข้าสู่ระบบ</a>
+    <a href="checkin.html"><span data-icon="clock"></span> ระบบลงเวลาครู</a>
+    <a href="admin.html"><span data-icon="lock"></span> เข้าสู่ระบบ</a>
   </div>
 </div>
 
@@ -49,7 +49,7 @@
   </div>
 </nav>
 
-<div class="ticker hidden" id="ticker"><div class="container row" style="flex-wrap:nowrap"><b>📢 ประกาศ</b><div class="ticker-track"><span id="tickerText"></span></div></div></div>
+<div class="ticker hidden" id="ticker"><div class="container row" style="flex-wrap:nowrap"><b><span data-icon="megaphone"></span> ประกาศ</b><div class="ticker-track"><span id="tickerText"></span></div></div></div>
 
 <header class="hero" id="top">
   <div class="hero-slides" id="heroSlides" aria-hidden="true">
@@ -175,10 +175,10 @@
     <div class="sec-head reveal"><span class="eyebrow">ลิงก์และบริการ</span><h2>หน่วยงานและเอกสารที่เกี่ยวข้อง</h2></div>
     <div class="grid g3" id="linkGroups"></div>
     <div class="grid g4" style="margin-top:20px">
-      <a class="card service reveal hidden" id="oitCard" target="_blank" rel="noopener"><span class="ic">📂</span><b>ITA / OIT</b><small class="muted">การเปิดเผยข้อมูลสาธารณะ</small></a>
-      <a class="card service reveal hidden" id="fbCard" target="_blank" rel="noopener" style="--d:.06s"><span class="ic">👍</span><b>Facebook</b><small class="muted">เพจโรงเรียน</small></a>
-      <a class="card service reveal" href="#contact" style="--d:.12s"><span class="ic">📍</span><b>แผนที่โรงเรียน</b><small class="muted">การเดินทาง</small></a>
-      <a class="card service reveal" href="checkin.html" style="--d:.18s"><span class="ic">🧑‍🏫</span><b>สำหรับครู</b><small class="muted">ระบบลงเวลา / ขอลา</small></a>
+      <a class="card service reveal hidden" id="oitCard" target="_blank" rel="noopener"><span class="ic" data-icon="folder"></span><b>ITA / OIT</b><small class="muted">การเปิดเผยข้อมูลสาธารณะ</small></a>
+      <a class="card service reveal hidden" id="fbCard" target="_blank" rel="noopener" style="--d:.06s"><span class="ic" data-icon="facebook"></span><b>Facebook</b><small class="muted">เพจโรงเรียน</small></a>
+      <a class="card service reveal" href="#contact" style="--d:.12s"><span class="ic" data-icon="pin"></span><b>แผนที่โรงเรียน</b><small class="muted">การเดินทาง</small></a>
+      <a class="card service reveal" href="checkin.html" style="--d:.18s"><span class="ic" data-icon="teacher"></span><b>สำหรับครู</b><small class="muted">ระบบลงเวลา / ขอลา</small></a>
     </div>
   </div>
 </section>
@@ -278,7 +278,7 @@
     $('newsList').innerHTML = shown.length ? shown.map(function (n, i) {
       return '<article class="card news-card reveal" style="--d:' + (i % 3) * .08 + 's" data-id="' + esc(n.id) + '"><div class="news-img">' +
         (n.image ? '<img loading="lazy" src="' + esc(n.image) + '" alt="">' : '<img src="assets/logo-192.png" alt="" class="news-ph">') +
-        '</div><div class="news-body"><div class="row" style="gap:6px"><span class="badge">' + esc(n.category || 'ข่าวประชาสัมพันธ์') + '</span><span class="small muted">' + (String(n.pinned) === 'true' ? '📌 ' : '') + U.thaiDate(n.date, true) + '</span></div><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p><span class="more">อ่านต่อ →</span></div></article>';
+        '</div><div class="news-body"><div class="row" style="gap:6px"><span class="badge">' + esc(n.category || 'ข่าวประชาสัมพันธ์') + '</span><span class="small muted">' + (String(n.pinned) === 'true' ? 'ปักหมุด · ' : '') + U.thaiDate(n.date, true) + '</span></div><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p><span class="more">อ่านต่อ →</span></div></article>';
     }).join('') : '<div class="empty card" style="grid-column:1/-1">ยังไม่มีข่าวในหมวดนี้</div>';
     reveal($('newsList'));
   }
@@ -319,7 +319,7 @@
     if (s.founded) { $('stNewsLabel').textContent = 'ปีที่ก่อตั้ง (พ.ศ.)'; $('stNews').textContent = s.founded; } else countUp($('stNews'), d.news.length);
 
     if (s.announcement) { $('tickerText').textContent = s.announcement; $('ticker').classList.remove('hidden'); }
-    if (s.phone) { $('topPhone').textContent = '☎ ' + s.phone; $('topPhone').classList.remove('hidden'); }
+    if (s.phone) { $('topPhone').textContent = 'โทร ' + s.phone; $('topPhone').classList.remove('hidden'); }
     if (s.facebook) ['topFb', 'fbCard'].forEach(function (id) { $(id).href = s.facebook; $(id).classList.remove('hidden'); });
     if (s.oitUrl) ['navOit', 'oitCard', 'footOit'].forEach(function (id) { $(id).href = s.oitUrl; $(id).classList.remove('hidden'); });
 
@@ -366,11 +366,11 @@
     }).join('');
 
     var contacts = [];
-    if (s.phone) contacts.push(['☎️', 'โทรศัพท์', '<a href="tel:' + esc(s.phone) + '">' + esc(s.phone) + '</a>']);
-    if (s.email) contacts.push(['✉️', 'อีเมล', '<a href="mailto:' + esc(s.email) + '">' + esc(s.email) + '</a>']);
-    if (s.facebook) contacts.push(['👍', 'Facebook', '<a target="_blank" rel="noopener" href="' + esc(s.facebook) + '">เพจโรงเรียนบ้านทุ่งข้าวพวง</a>']);
-    if (s.mapUrl) contacts.push(['📍', 'แผนที่', '<a target="_blank" rel="noopener" href="' + esc(s.mapUrl) + '">เปิดใน Google Maps</a>']);
-    $('contactList').innerHTML = contacts.map(function (c) { return '<div class="card row contact-item" style="padding:14px 18px;flex-wrap:nowrap"><span style="font-size:1.4rem">' + c[0] + '</span><div><span class="muted small">' + c[1] + '</span><br>' + c[2] + '</div></div>'; }).join('');
+    if (s.phone) contacts.push([U.icon('phone'), 'โทรศัพท์', '<a href="tel:' + esc(s.phone) + '">' + esc(s.phone) + '</a>']);
+    if (s.email) contacts.push([U.icon('mail'), 'อีเมล', '<a href="mailto:' + esc(s.email) + '">' + esc(s.email) + '</a>']);
+    if (s.facebook) contacts.push([U.icon('facebook'), 'Facebook', '<a target="_blank" rel="noopener" href="' + esc(s.facebook) + '">เพจโรงเรียนบ้านทุ่งข้าวพวง</a>']);
+    if (s.mapUrl) contacts.push([U.icon('pin'), 'แผนที่', '<a target="_blank" rel="noopener" href="' + esc(s.mapUrl) + '">เปิดใน Google Maps</a>']);
+    $('contactList').innerHTML = contacts.map(function (c) { return '<div class="card row contact-item" style="padding:14px 18px;flex-wrap:nowrap"><span class="contact-ic">' + c[0] + '</span><div><span class="muted small">' + c[1] + '</span><br>' + c[2] + '</div></div>'; }).join('');
     if (s.lat && s.lng) $('mapBox').innerHTML = '<iframe class="map" style="height:380px" loading="lazy" title="แผนที่โรงเรียน" src="https://maps.google.com/maps?q=' + encodeURIComponent(s.lat + ',' + s.lng) + '&z=15&output=embed"></iframe>';
     reveal();
   }).catch(function (e) { U.toast(e.message, 'bad'); });

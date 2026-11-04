@@ -125,7 +125,7 @@
   if (U.DEMO) $('demoBar').classList.remove('hidden');
 
   setInterval(function () { $('nowText').textContent = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + new Date().toLocaleTimeString('th-TH', { hour12: false }) + ' น.'; }, 1000);
-  function showHello() { if (ME) { $('hello').textContent = '👋 สวัสดี ' + ME.name; $('hello').classList.remove('hidden'); } }
+  function showHello() { if (ME) { $('hello').textContent = 'สวัสดี ' + ME.name; $('hello').classList.remove('hidden'); } }
   showHello();
 
   // แท็บ
@@ -165,7 +165,7 @@
       var s = PUB && PUB.settings;
       if (!s || !s.lat) { setGps('bad', 'ยังไม่ได้ตั้งพิกัดโรงเรียน', 'ติดต่อผู้ดูแลระบบ'); return p; }
       var d = U.distance(p.lat, p.lng, +s.lat, +s.lng), inside = d <= +s.radius;
-      setGps(inside ? 'ok' : 'bad', inside ? 'อยู่ในบริเวณโรงเรียน ✓' : 'อยู่นอกบริเวณโรงเรียน',
+      setGps(inside ? 'ok' : 'bad', inside ? 'อยู่ในบริเวณโรงเรียน' : 'อยู่นอกบริเวณโรงเรียน',
         'ห่างจุดศูนย์กลาง ' + Math.round(d) + ' ม. (อนุญาต ' + s.radius + ' ม.) · ความแม่นยำ ±' + Math.round(p.accuracy) + ' ม.');
       return p;
     }).catch(function (e) { setGps('bad', 'ไม่สามารถระบุตำแหน่ง', e.message); throw e; });
@@ -215,7 +215,7 @@
       var cls = r.status === 'สาย' || r.status === 'กลับก่อนเวลา' ? 'b-late' : 'b-ok';
       var title = r.already ? 'ลงเวลามาไว้แล้ว' : (r.mode === 'in' ? 'ลงเวลามาสำเร็จ' : 'ลงเวลากลับสำเร็จ');
       box.className = 'card card-lg result ok pop';
-      box.innerHTML = (photo ? '<img src="' + photo + '" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin:0 auto 12px;border:4px solid var(--ok-bg);transform:scaleX(-1)">' : '<div class="big">✓</div>') +
+      box.innerHTML = (photo ? '<img src="' + photo + '" style="width:110px;height:110px;border-radius:50%;object-fit:cover;margin:0 auto 12px;border:4px solid var(--ok-bg);transform:scaleX(-1)">' : '<div class="big">' + U.icon('check') + '</div>') +
         '<h2 style="margin-bottom:2px">' + U.esc(r.name) + '</h2><div class="muted">' + U.esc(r.position || '') + '</div>' +
         '<div style="font:600 2.6rem var(--font-head);color:var(--purple-700);margin:12px 0 4px">' + U.hm(r.time) + ' น.</div>' +
         '<div class="row" style="justify-content:center"><span class="badge ' + cls + '">' + title + ' · ' + U.esc(r.status || '') + '</span></div>' +
@@ -223,7 +223,7 @@
         '<button class="btn btn-primary" id="againBtn">เสร็จสิ้น</button>';
     } else {
       box.className = 'card card-lg result bad pop';
-      box.innerHTML = '<div class="big">!</div><h2>ลงเวลาไม่สำเร็จ</h2><p class="muted">' + U.esc(r.message) + '</p>' +
+      box.innerHTML = '<div class="big">' + U.icon('alert') + '</div><h2>ลงเวลาไม่สำเร็จ</h2><p class="muted">' + U.esc(r.message) + '</p>' +
         '<button class="btn btn-primary" id="againBtn">ลองอีกครั้ง</button>';
     }
     $('againBtn').onclick = resetScan;
