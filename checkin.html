@@ -127,6 +127,7 @@
   setInterval(function () { $('nowText').textContent = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + new Date().toLocaleTimeString('th-TH', { hour12: false }) + ' น.'; }, 1000);
   function showHello() { if (ME) { $('hello').textContent = 'สวัสดี ' + ME.name; $('hello').classList.remove('hidden'); } }
   showHello();
+  Face.load().catch(function () { }); // โหลดระบบสแกนหน้าล่วงหน้า กดสแกนแล้วจะเริ่มได้ทันที
 
   // แท็บ
   function showTab(name) {
