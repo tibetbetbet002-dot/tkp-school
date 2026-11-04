@@ -1,14 +1,25 @@
 /* สแกนใบหน้าด้วย face-api.js (ประมวลผลในเครื่อง ไม่ส่งภาพไปบุคคลที่สาม) */
 (function () {
   var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model/';
+  var WASM_URL = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@4.16.0/dist/';
   var loading = null, stream = null;
 
+  // ใช้ WASM เป็นหลัก: ครั้งแรกเร็ว (~0.2 วินาที) ไม่ต้องคอมไพล์กราฟิกแบบ WebGL ที่ทำให้หน้าค้าง ~10 วินาทีบนการ์ดจอ Intel
+  function pickBackend() {
+    var tf = faceapi.tf;
+    try { tf.setWasmPaths(WASM_URL); } catch (e) { /* ไม่มี WASM ในชุดนี้ */ }
+    return tf.setBackend('wasm').then(function (ok) { if (!ok) throw new Error('wasm'); return tf.ready(); })
+      .catch(function () { return tf.setBackend('webgl').then(function () { return tf.ready(); }); });
+  }
+
   function load() {
-    if (!loading) loading = Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-    ]).catch(function (e) { loading = null; throw new Error('โหลดโมเดลสแกนใบหน้าไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต'); });
+    if (!loading) loading = pickBackend().then(function () {
+      return Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+      ]);
+    }).catch(function (e) { loading = null; throw new Error('โหลดระบบสแกนใบหน้าไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'); });
     return loading;
   }
 
@@ -33,6 +44,7 @@
     return out.map(function (v) { return Math.round(v * 10000) / 10000; });
   }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  var MIN_FACE = 0.14; // ความกว้างใบหน้าขั้นต่ำเทียบกับภาพ (กล้องโน้ตบุ๊กมุมกว้าง หน้าจะเล็กกว่ากล้องมือถือ)
 
   /*
    * สแกนเพื่อลงเวลา: รอให้หน้าอยู่ในกรอบ (และกระพริบตาถ้าเปิดตรวจสิ่งมีชีวิต)
@@ -42,13 +54,14 @@
     opts = opts || {};
     var status = opts.onStatus || function () {};
     var samples = [], opened = false, blinked = !opts.liveness, t0 = Date.now();
+    await waitForVideo(video);
     while (true) {
       if (opts.isCancelled && opts.isCancelled()) throw new Error('ยกเลิก');
       if (Date.now() - t0 > 40000) throw new Error('หมดเวลา ไม่สามารถตรวจจับใบหน้าได้ ลองอีกครั้งในที่มีแสงสว่าง');
       var r = await detect(video);
       if (!r) { status('ไม่พบใบหน้า — มองตรงไปที่กล้อง', false); samples = []; await sleep(80); continue; }
       var size = r.detection.box.width / video.videoWidth;
-      if (size < 0.22) { status('ขยับเข้ามาใกล้กล้องอีกนิด', false); await sleep(80); continue; }
+      if (size < MIN_FACE) { status('ขยับเข้ามาใกล้กล้องอีกนิด', false); await sleep(80); continue; }
       var e = eyeRatio(r.landmarks);
       if (!blinked) {
         if (e > 0.26) { opened = true; samples.push(Array.from(r.descriptor)); }
@@ -65,19 +78,31 @@
     }
   }
 
-  /* ลงทะเบียนใบหน้า: เก็บ 3 ตัวอย่างจากมุมต่างกันเล็กน้อย */
-  async function enroll(video, onStatus) {
+  // รอให้กล้องส่งภาพจริงก่อน (บางเครื่องภาพแรกยังว่าง ทำให้ตรวจจับไม่เจอ)
+  async function waitForVideo(video) {
+    for (var i = 0; i < 50 && !(video.videoWidth && video.readyState >= 2); i++) await sleep(100);
+    if (!video.videoWidth) throw new Error('กล้องยังไม่ส่งภาพ กรุณาปิดแล้วลองใหม่');
+  }
+
+  /* ลงทะเบียนใบหน้า: เก็บ 3 ตัวอย่างจากมุมต่างกันเล็กน้อย
+     opts.isCancelled() ให้กดยกเลิกกลางทางได้ */
+  async function enroll(video, onStatus, opts) {
+    opts = opts || {};
     var prompts = ['มองตรงไปที่กล้อง', 'หันหน้าไปทางซ้ายเล็กน้อย', 'หันหน้าไปทางขวาเล็กน้อย'];
-    var faces = [], photo = '';
+    var faces = [], photo = '', t0 = Date.now();
+    await waitForVideo(video);
     for (var i = 0; i < prompts.length; i++) {
       onStatus(prompts[i] + ' (' + (i + 1) + '/3)', true);
-      await sleep(1300);
-      var got = [], tries = 0;
+      await sleep(1000);
+      var got = [], r = null;
       while (got.length < 3) {
-        if (++tries > 120) throw new Error('ตรวจจับใบหน้าไม่ได้ กรุณาอยู่ในที่มีแสงสว่าง');
-        var r = await detect(video);
-        if (r && r.detection.box.width / video.videoWidth > 0.2) got.push(Array.from(r.descriptor));
-        else onStatus('ไม่พบใบหน้าชัดเจน — ' + prompts[i], false);
+        if (opts.isCancelled && opts.isCancelled()) throw new Error('ยกเลิก');
+        if (Date.now() - t0 > 45000) throw new Error('ตรวจจับใบหน้าไม่ได้ภายในเวลาที่กำหนด กรุณาอยู่ในที่มีแสงสว่าง หันหน้าเข้ากล้อง แล้วลองใหม่');
+        var d = await detect(video);
+        if (!d) onStatus('ไม่พบใบหน้า — ' + prompts[i], false);
+        else if (d.detection.box.width / video.videoWidth < MIN_FACE) onStatus('ขยับเข้ามาใกล้กล้องอีกนิด', false);
+        else { r = d; got.push(Array.from(d.descriptor)); onStatus(prompts[i] + ' (' + (i + 1) + '/3) · ' + '●'.repeat(got.length) + '○'.repeat(3 - got.length), true); }
+        await sleep(60); // เว้นจังหวะให้หน้าจอไม่ค้าง
       }
       faces.push(average(got));
       if (i === 0) {

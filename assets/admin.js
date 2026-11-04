@@ -342,17 +342,27 @@
       '<div class="scanner" style="max-width:340px"><video id="eVideo" playsinline muted></video><div class="frame" id="eFrame"></div><div class="msg" id="eMsg">กดเริ่มเพื่อเปิดกล้อง</div></div>' +
       '<p class="small muted center">อยู่ในที่มีแสงสว่าง ถอดแว่นกันแดด/หน้ากาก แล้วทำตามคำแนะนำบนจอ</p>' +
       '<div class="row"><span class="spacer"></span><button class="btn" data-close>ปิด</button><button class="btn btn-primary" id="eStart">เริ่มลงทะเบียน</button></div>');
-    var status = function (m, ok) { $('eMsg').textContent = m; $('eFrame').classList.toggle('ok', !!ok); };
+    var status = function (m, ok) { if ($('eMsg')) { $('eMsg').textContent = m; $('eFrame').classList.toggle('ok', !!ok); } };
+    var closed = function () { return !$('eVideo') || $('modal').classList.contains('hidden'); };
+    Face.load().catch(function () { }); // โหลดระบบล่วงหน้าระหว่างรอกดเริ่ม
     $('eStart').onclick = async function () {
-      this.disabled = true;
+      var btn = this; btn.disabled = true;
       try {
-        status('กำลังโหลดระบบสแกนใบหน้า...');
-        await Face.load(); await Face.start($('eVideo'));
-        var r = await Face.enroll($('eVideo'), status);
+        status('กำลังเตรียมระบบสแกนใบหน้า...');
+        await Face.load();
+        if (closed()) return;
+        status('กำลังเปิดกล้อง...');
+        await Face.start($('eVideo'));
+        var r = await Face.enroll($('eVideo'), status, { isCancelled: closed });
         Face.stop();
+        status('กำลังบันทึกข้อมูล...', true);
         await api('teacherSave', { teacher: { id: t.id, name: t.name, position: t.position, pin: t.pin, order: t.order, active: t.active, photo: r.photo }, faces: r.faces });
         U.toast('ลงทะเบียนใบหน้า ' + t.name + ' สำเร็จ', 'ok'); closeModal(); views.teachers();
-      } catch (e) { Face.stop(); status(e.message); fail(e); this.disabled = false; this.textContent = 'ลองอีกครั้ง'; }
+      } catch (e) {
+        Face.stop();
+        if (e.message === 'ยกเลิก' || closed()) return;
+        status(e.message); fail(e); btn.disabled = false; btn.textContent = 'ลองอีกครั้ง';
+      }
     };
   }
 
