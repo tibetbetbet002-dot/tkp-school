@@ -52,7 +52,7 @@
       var e = eyeRatio(r.landmarks);
       if (!blinked) {
         if (e > 0.26) { opened = true; samples.push(Array.from(r.descriptor)); }
-        else if (opened && e < 0.21) { blinked = true; status('ตรวจพบการกระพริบตา ✓', true); }
+        else if (opened && e < 0.21) { blinked = true; status('ตรวจพบการกระพริบตาแล้ว', true); }
         if (samples.length > 5) samples.shift();
         if (!blinked) { status('กระพริบตา 1 ครั้งเพื่อยืนยันตัวตน', true); continue; }
       } else if (e > 0.24) samples.push(Array.from(r.descriptor));
@@ -88,7 +88,7 @@
         photo = c.toDataURL('image/jpeg', 0.75);
       }
     }
-    onStatus('ลงทะเบียนใบหน้าเรียบร้อย ✓', true);
+    onStatus('ลงทะเบียนใบหน้าเรียบร้อย', true);
     return { faces: faces, photo: photo };
   }
 

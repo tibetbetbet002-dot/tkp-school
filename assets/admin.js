@@ -36,7 +36,7 @@
     ME = me;
     var isAdmin = me.role === 'admin';
     document.querySelectorAll('#side .admin-only').forEach(function (el) { el.classList.toggle('hidden', !isAdmin); });
-    $('whoami').textContent = '👤 ' + me.name + ' (' + (ADMIN_ROLES[me.role] || me.role) + ')';
+    $('whoami').textContent = me.name + ' (' + (ADMIN_ROLES[me.role] || me.role) + ')';
     ['whoami', 'pwBtn', 'logoutBtn'].forEach(function (id) { $(id).classList.remove('hidden'); });
     $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
     if (me.mustChange) { changePassword(true); return; }
@@ -73,7 +73,7 @@
   // ---------- ตั้งค่าครั้งแรก: สร้าง 3 บัญชีพร้อมรหัสสุ่ม ----------
   function bootstrapWizard() {
     var rows = [['director', 'ผู้อำนวยการโรงเรียน', 'admin'], ['officer', 'เจ้าหน้าที่ธุรการ', 'admin'], ['news', 'ครูประชาสัมพันธ์', 'editor']];
-    openModal('<h3>🔒 ตั้งค่าบัญชีผู้ดูแลครั้งแรก</h3><p class="muted small">ระบบสร้างรหัสผ่านสุ่มที่แข็งแรงให้แต่ละบัญชีแล้ว (แก้ไขได้) ใส่อีเมลไว้เพื่อใช้ “ลืมรหัสผ่าน” · หลังกดสร้าง บัญชี admin / admin1234 จะใช้ไม่ได้อีก</p><form id="bsForm">' +
+    openModal('<h3>ตั้งค่าบัญชีผู้ดูแลครั้งแรก</h3><p class="muted small">ระบบสร้างรหัสผ่านสุ่มที่แข็งแรงให้แต่ละบัญชีแล้ว (แก้ไขได้) ใส่อีเมลไว้เพื่อใช้ “ลืมรหัสผ่าน” · หลังกดสร้าง บัญชี admin / admin1234 จะใช้ไม่ได้อีก</p><form id="bsForm">' +
       rows.map(function (r, i) {
         return '<div class="card" style="padding:14px;margin-bottom:12px"><b>บัญชีที่ ' + (i + 1) + '</b><div class="grid g2" style="gap:0 12px;margin-top:8px">' +
           '<div class="field"><label>ชื่อผู้ใช้</label><input name="u' + i + '" value="' + r[0] + '" autocapitalize="none" required></div>' +
@@ -101,7 +101,7 @@
   }
   function showCredentials(accounts) {
     var text = accounts.map(function (a) { return a.name + '\nชื่อผู้ใช้: ' + a.username + '\nรหัสผ่าน: ' + a.password + '\nสิทธิ์: ' + (ADMIN_ROLES[a.role] || a.role); }).join('\n\n');
-    openModal('<h3>✅ สร้างบัญชีเรียบร้อย</h3><p class="muted small"><b style="color:var(--bad)">จดหรือบันทึกรหัสผ่านไว้ตอนนี้</b> ระบบเก็บรหัสแบบเข้ารหัส จะแสดงให้ดูได้ครั้งนี้ครั้งเดียว (เปลี่ยนภายหลังได้ที่ปุ่ม “เปลี่ยนรหัสผ่าน”)</p>' +
+    openModal('<h3>สร้างบัญชีเรียบร้อย</h3><p class="muted small"><b style="color:var(--bad)">จดหรือบันทึกรหัสผ่านไว้ตอนนี้</b> ระบบเก็บรหัสแบบเข้ารหัส จะแสดงให้ดูได้ครั้งนี้ครั้งเดียว (เปลี่ยนภายหลังได้ที่ปุ่ม “เปลี่ยนรหัสผ่าน”)</p>' +
       '<div class="table-wrap" style="margin-bottom:14px"><table><thead><tr><th>ชื่อ</th><th>ชื่อผู้ใช้</th><th>รหัสผ่าน</th></tr></thead><tbody>' +
       accounts.map(function (a) { return '<tr><td>' + esc(a.name) + '<div class="small muted">' + esc(ADMIN_ROLES[a.role]) + '</div></td><td><b>' + esc(a.username) + '</b></td><td style="font-family:monospace">' + esc(a.password) + '</td></tr>'; }).join('') +
       '</tbody></table></div><div class="row"><button class="btn" id="credCopy">คัดลอกทั้งหมด</button><button class="btn" id="credPrint">พิมพ์</button><span class="spacer"></span><button class="btn btn-primary" id="credDone">บันทึกแล้ว เข้าใช้งาน</button></div>');
@@ -118,7 +118,7 @@
   function closeModalForce() { ME = null; closeModal(); }
 
   // ---------- ลืมรหัสผ่าน ----------
-  if (U.DEMO) window.addEventListener('demo-mail', function (e) { alert('📧 อีเมลจำลอง (โหมดทดลอง)\nถึง: ' + e.detail.to + '\nเรื่อง: ' + e.detail.subject + '\n\n' + e.detail.body); });
+  if (U.DEMO) window.addEventListener('demo-mail', function (e) { alert('อีเมลจำลอง (โหมดทดลอง)\nถึง: ' + e.detail.to + '\nเรื่อง: ' + e.detail.subject + '\n\n' + e.detail.body); });
   $('forgotLink').onclick = function (e) {
     e.preventDefault();
     openModal('<h3>ลืมรหัสผ่าน</h3><p class="muted small">กรอกชื่อผู้ใช้หรืออีเมลของบัญชี ระบบจะส่งรหัสยืนยัน 8 หลักไปที่อีเมลที่ผูกไว้</p><form id="fgForm">' +
@@ -153,7 +153,7 @@
   function changePassword(forced) {
     var first = ME && ME.bootstrap;
     if (first) { bootstrapWizard(); return; }
-    openModal('<h3>' + (forced ? '🔒 ตั้งรหัสผ่านใหม่ก่อนใช้งาน' : 'เปลี่ยนรหัสผ่าน') + '</h3>' +
+    openModal('<h3>' + (forced ? 'ตั้งรหัสผ่านใหม่ก่อนใช้งาน' : 'เปลี่ยนรหัสผ่าน') + '</h3>' +
       (first ? '<p class="muted small">นี่คือการเข้าใช้ครั้งแรกด้วยบัญชีเริ่มต้น กรุณาตั้งชื่อผู้ใช้และรหัสผ่านของคุณเอง รหัสเริ่มต้น admin1234 จะใช้ไม่ได้อีก</p>' : '<p class="muted small">รหัสผ่านต้องยาวอย่างน้อย 8 ตัว และมีทั้งตัวอักษรและตัวเลข</p>') +
       '<form id="pwForm">' +
       (first ? '<div class="field"><label>ชื่อผู้ใช้ใหม่ (ภาษาอังกฤษ/ตัวเลข)</label><input name="newUsername" required value="admin" autocapitalize="none"></div><div class="field"><label>ชื่อที่แสดง</label><input name="name" value="ผู้ดูแลระบบ"></div>' : '') +
@@ -209,10 +209,10 @@
       $('view').innerHTML = head('แดชบอร์ด', '<input type="date" id="dashDate" value="' + date + '" style="width:auto">') +
         (t.workDay ? '' : '<div class="card" style="margin-bottom:16px;background:var(--gold-100)">วันนี้เป็นวันหยุด' + (t.holiday ? ' — ' + esc(t.holiday) : '') + '</div>') +
         '<div class="grid g4" style="gap:14px">' +
-        kpi('✅', (c.present + c.late) + '<span class="muted" style="font-size:1rem">/' + t.total + '</span>', 'มาปฏิบัติราชการ', 'var(--ok-bg)', 'var(--ok)') +
-        kpi('⏰', c.late, 'มาสาย', 'var(--warn-bg)', 'var(--warn)') +
-        kpi('📝', c.leave + c.official, 'ลา / ไปราชการ', 'var(--info-bg)', 'var(--info)') +
-        kpi('❔', c.waiting + c.absent, c.absent ? 'ขาด' : 'ยังไม่ลงเวลา', 'var(--bad-bg)', 'var(--bad)') + '</div>' +
+        kpi(U.icon('check'), (c.present + c.late) + '<span class="muted" style="font-size:1rem">/' + t.total + '</span>', 'มาปฏิบัติราชการ', 'var(--ok-bg)', 'var(--ok)') +
+        kpi(U.icon('clock'), c.late, 'มาสาย', 'var(--warn-bg)', 'var(--warn)') +
+        kpi(U.icon('note'), c.leave + c.official, 'ลา / ไปราชการ', 'var(--info-bg)', 'var(--info)') +
+        kpi(U.icon('help'), c.waiting + c.absent, c.absent ? 'ขาด' : 'ยังไม่ลงเวลา', 'var(--bad-bg)', 'var(--bad)') + '</div>' +
         (d.pendingLeaves ? '<div class="card row" style="margin-top:14px;border-color:#f2dc94;background:var(--gold-100)"><b>มีคำขอลารออนุมัติ ' + d.pendingLeaves + ' รายการ</b><span class="spacer"></span><button class="btn btn-sm btn-primary" id="goLeaves">พิจารณา</button></div>' : '') +
         '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:16px">' +
         '<div class="card"><h3>สถานะ' + (date === U.todayStr() ? 'วันนี้' : 'วันที่ ' + U.thaiDate(date, true)) + '</h3><div style="height:220px"><canvas id="chToday"></canvas></div></div>' +
@@ -407,11 +407,11 @@
       $('view').innerHTML = head('รายงาน (Microsoft Word)') +
         '<p class="muted small" style="margin-top:-8px">ไฟล์ใช้ฟอนต์ TH SarabunPSK มีช่องลงนามผู้ตรวจสอบและผู้อำนวยการ (ตั้งชื่อผู้อำนวยการได้ที่เมนูตั้งค่า)</p>' +
         '<div class="grid g2">' +
-        card('🗓️', 'บัญชีลงเวลาประจำวัน', 'รายชื่อ เวลามา-กลับ หมายเหตุ สรุปจำนวน', '<input type="date" id="rDate" value="' + today + '">', 'rDaily') +
-        card('📊', 'สรุปประจำเดือน', 'จำนวนวันมา สาย ลาป่วย ลากิจ ไปราชการ ขาด รายบุคคล', '<input type="month" id="rMonth" value="' + month + '">', 'rMonthly') +
-        card('🧾', 'บัญชีลงเวลารายเดือน (ตาราง)', 'ตารางรายชื่อ x วันที่ พร้อมสัญลักษณ์ / ส ล ร ข', '<input type="month" id="rMatrix" value="' + month + '">', 'rMatrixBtn') +
-        card('📝', 'รายงานการลา / ไปราชการ', 'รายการลาทั้งหมดในเดือน พร้อมสถานะอนุมัติ', '<input type="month" id="rLeave" value="' + month + '">', 'rLeaves') +
-        card('👤', 'รายงานรายบุคคล', 'เวลามา-กลับทุกวันของครู 1 คน ในเดือนที่เลือก',
+        card(U.icon('calendar'), 'บัญชีลงเวลาประจำวัน', 'รายชื่อ เวลามา-กลับ หมายเหตุ สรุปจำนวน', '<input type="date" id="rDate" value="' + today + '">', 'rDaily') +
+        card(U.icon('chart'), 'สรุปประจำเดือน', 'จำนวนวันมา สาย ลาป่วย ลากิจ ไปราชการ ขาด รายบุคคล', '<input type="month" id="rMonth" value="' + month + '">', 'rMonthly') +
+        card(U.icon('table'), 'บัญชีลงเวลารายเดือน (ตาราง)', 'ตารางรายชื่อ x วันที่ พร้อมสัญลักษณ์ / ส ล ร ข', '<input type="month" id="rMatrix" value="' + month + '">', 'rMatrixBtn') +
+        card(U.icon('note'), 'รายงานการลา / ไปราชการ', 'รายการลาทั้งหมดในเดือน พร้อมสถานะอนุมัติ', '<input type="month" id="rLeave" value="' + month + '">', 'rLeaves') +
+        card(U.icon('user'), 'รายงานรายบุคคล', 'เวลามา-กลับทุกวันของครู 1 คน ในเดือนที่เลือก',
           '<select id="rPerson">' + teachers.map(function (t) { return '<option value="' + esc(t.id) + '">' + esc(t.name) + '</option>'; }).join('') + '</select><input type="month" id="rPMonth" value="' + month + '">', 'rPersonBtn') +
         '</div>';
       function run(btn, fn) {
@@ -436,8 +436,8 @@
     API.call('getPublic').then(function (d) {
       $('view').innerHTML = head('ข่าวประชาสัมพันธ์', '<button class="btn btn-primary" id="nAdd">+ เพิ่มข่าว</button>') +
         (d.news.length ? '<div class="grid g3">' + d.news.map(function (n) {
-          return '<div class="card news-card" style="cursor:default"><div class="news-img">' + (n.image ? '<img src="' + esc(n.image) + '" alt="">' : '📰') + '</div><div class="news-body">' +
-            '<span class="badge">' + esc(n.category || 'ข่าวประชาสัมพันธ์') + '</span> <span class="small muted">' + (String(n.pinned) === 'true' ? '📌 ' : '') + U.thaiDate(n.date, true) + '</span><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p>' +
+          return '<div class="card news-card" style="cursor:default"><div class="news-img">' + (n.image ? '<img src="' + esc(n.image) + '" alt="">' : U.icon('news')) + '</div><div class="news-body">' +
+            '<span class="badge">' + esc(n.category || 'ข่าวประชาสัมพันธ์') + '</span> <span class="small muted">' + (String(n.pinned) === 'true' ? 'ปักหมุด · ' : '') + U.thaiDate(n.date, true) + '</span><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p>' +
             '<div class="row" style="margin-top:12px"><button class="btn btn-sm" data-edit="' + esc(n.id) + '">แก้ไข</button><button class="btn btn-sm btn-danger" data-del="' + esc(n.id) + '">ลบ</button></div></div></div>';
         }).join('') + '</div>' : '<div class="card empty">ยังไม่มีข่าว</div>');
       var byId = {}; d.news.forEach(function (n) { byId[n.id] = n; });
@@ -507,18 +507,18 @@
       S = s;
       $('view').innerHTML = head('ข้อมูลเว็บไซต์', '<a class="btn" href="index.html" target="_blank">ดูหน้าเว็บ</a><button class="btn btn-primary" id="wSave">บันทึก</button>') +
         '<p class="muted small" style="margin-top:-8px">ข้อมูลในหน้านี้แสดงบนหน้าเว็บโรงเรียน หัวข้อไหนเว้นว่างไว้จะไม่แสดง</p><form id="wForm" class="grid" style="gap:16px">' +
-        '<div class="card"><h3>📢 ประกาศ (ข้อความวิ่งด้านบนเว็บ)</h3>' + inp(s, 'announcement', 'ข้อความประกาศ', 'placeholder="เช่น รับสมัครนักเรียนใหม่ ปีการศึกษา 2570 ตั้งแต่วันที่ ..."', 'เว้นว่าง = ไม่แสดงแถบประกาศ') + '</div>' +
-        '<div class="card"><h3>👤 ผู้บริหาร</h3><div class="grid g2" style="gap:0 14px">' + inp(s, 'directorName', 'ชื่อผู้อำนวยการ', '', 'ใช้ในช่องลงนามของรายงาน Word ด้วย') + inp(s, 'directorTitle', 'ตำแหน่ง') + '</div>' +
+        '<div class="card"><h3>' + U.icon('megaphone') + ' ประกาศ (ข้อความวิ่งด้านบนเว็บ)</h3>' + inp(s, 'announcement', 'ข้อความประกาศ', 'placeholder="เช่น รับสมัครนักเรียนใหม่ ปีการศึกษา 2570 ตั้งแต่วันที่ ..."', 'เว้นว่าง = ไม่แสดงแถบประกาศ') + '</div>' +
+        '<div class="card"><h3>' + U.icon('user') + ' ผู้บริหาร</h3><div class="grid g2" style="gap:0 14px">' + inp(s, 'directorName', 'ชื่อผู้อำนวยการ', '', 'ใช้ในช่องลงนามของรายงาน Word ด้วย') + inp(s, 'directorTitle', 'ตำแหน่ง') + '</div>' +
         imagePicker(s, 'directorPhoto', 'รูปผู้อำนวยการ', 600) + area(s, 'directorMessage', 'สารจากผู้อำนวยการ', '', 4) + '</div>' +
-        '<div class="card"><h3>🏫 ข้อมูลทั่วไป</h3><div class="grid g2" style="gap:0 14px">' +
+        '<div class="card"><h3>' + U.icon('school') + ' ข้อมูลทั่วไป</h3><div class="grid g2" style="gap:0 14px">' +
         inp(s, 'schoolName', 'ชื่อโรงเรียน') + inp(s, 'schoolNameEn', 'ชื่อภาษาอังกฤษ') + inp(s, 'affiliation', 'สังกัด') + inp(s, 'motto', 'ปรัชญา / คำขวัญ') +
         inp(s, 'studentsCount', 'จำนวนนักเรียน', 'type="number"') + inp(s, 'classesCount', 'จำนวนระดับชั้น', 'type="number"') + inp(s, 'founded', 'ปีที่ก่อตั้ง (พ.ศ.)') + inp(s, 'schoolColors', 'สีประจำโรงเรียน') + '</div>' +
         area(s, 'about', 'คำแนะนำโรงเรียน (ย่อหน้าสั้น ๆ)', '', 3) + '</div>' +
-        '<div class="card"><h3>📘 ข้อมูลพื้นฐาน</h3>' + area(s, 'history', 'ประวัติโรงเรียน', '', 5) + area(s, 'vision', 'วิสัยทัศน์', '', 3) + area(s, 'mission', 'พันธกิจ', 'ขึ้นบรรทัดใหม่ได้ตามต้องการ', 5) +
+        '<div class="card"><h3>' + U.icon('book') + ' ข้อมูลพื้นฐาน</h3>' + area(s, 'history', 'ประวัติโรงเรียน', '', 5) + area(s, 'vision', 'วิสัยทัศน์', '', 3) + area(s, 'mission', 'พันธกิจ', 'ขึ้นบรรทัดใหม่ได้ตามต้องการ', 5) +
         area(s, 'goals', 'เป้าประสงค์', '', 4) + '<div class="grid g2" style="gap:0 14px">' + area(s, 'identity', 'อัตลักษณ์', '', 2) + area(s, 'uniqueness', 'เอกลักษณ์', '', 2) + '</div></div>' +
-        '<div class="card"><h3>☎️ ติดต่อ</h3><div class="grid g2" style="gap:0 14px">' + inp(s, 'phone', 'โทรศัพท์') + inp(s, 'email', 'อีเมล') + inp(s, 'facebook', 'ลิงก์เพจ Facebook') + inp(s, 'mapUrl', 'ลิงก์ Google Maps') +
+        '<div class="card"><h3>' + U.icon('phone') + ' ติดต่อ</h3><div class="grid g2" style="gap:0 14px">' + inp(s, 'phone', 'โทรศัพท์') + inp(s, 'email', 'อีเมล') + inp(s, 'facebook', 'ลิงก์เพจ Facebook') + inp(s, 'mapUrl', 'ลิงก์ Google Maps') +
         inp(s, 'address', 'ที่อยู่') + inp(s, 'oitUrl', 'ลิงก์หน้า ITA / OIT', '', 'แสดงเป็นเมนู ITA / OIT') + '</div></div>' +
-        '<div class="card"><h3>🖼️ รูปภาพ</h3><div class="grid g2" style="gap:0 14px">' + imagePicker(s, 'logoUrl', 'โลโก้ (เว้นว่าง = ใช้ตราโรงเรียนเดิม)', 512) + imagePicker(s, 'heroImage', 'ภาพพื้นหลังหน้าแรก (เช่น รูปอาคารเรียน)', 1600) + '</div></div>' +
+        '<div class="card"><h3>' + U.icon('image') + ' รูปภาพ</h3><div class="grid g2" style="gap:0 14px">' + imagePicker(s, 'logoUrl', 'โลโก้ (เว้นว่าง = ใช้ตราโรงเรียนเดิม)', 512) + imagePicker(s, 'heroImage', 'ภาพพื้นหลังหน้าแรก (เช่น รูปอาคารเรียน)', 1600) + '</div></div>' +
         '</form>';
       bindImagePickers($('wForm'));
       $('wSave').onclick = function () {
@@ -593,16 +593,16 @@
       S = s;
       var toggle = function (k, label) { return '<label class="row" style="font-weight:400;margin-bottom:12px"><input type="checkbox" data-toggle="' + k + '"' + (s[k] === 'on' ? ' checked' : '') + '> ' + label + '</label>'; };
       $('view').innerHTML = head('ตั้งค่าระบบลงเวลา', '<button class="btn btn-primary" id="sSave">บันทึกการตั้งค่า</button>') + '<form id="sForm" class="grid" style="gap:16px">' +
-        '<div class="card"><h3>📍 พิกัดโรงเรียน (GPS)</h3><p class="muted small">ครูลงเวลาได้เฉพาะเมื่ออยู่ในรัศมีที่กำหนดจากจุดนี้ ถ้าจุดยังไม่ตรงกลางโรงเรียน ให้ไปยืนกลางโรงเรียนแล้วกด “ใช้ตำแหน่งปัจจุบัน”</p>' +
+        '<div class="card"><h3>' + U.icon('pin') + ' พิกัดโรงเรียน (GPS)</h3><p class="muted small">ครูลงเวลาได้เฉพาะเมื่ออยู่ในรัศมีที่กำหนดจากจุดนี้ ถ้าจุดยังไม่ตรงกลางโรงเรียน ให้ไปยืนกลางโรงเรียนแล้วกด “ใช้ตำแหน่งปัจจุบัน”</p>' +
         '<div class="grid g3" style="gap:0 14px">' + inp(s, 'lat', 'ละติจูด', 'inputmode="decimal"') + inp(s, 'lng', 'ลองจิจูด', 'inputmode="decimal"') + inp(s, 'radius', 'รัศมีที่อนุญาต (เมตร)', 'type="number" min="30"') + '</div>' +
-        '<div class="row"><button type="button" class="btn btn-gold" id="sHere">📍 ใช้ตำแหน่งปัจจุบัน</button><span class="small muted" id="sHereInfo"></span></div>' +
+        '<div class="row"><button type="button" class="btn btn-gold" id="sHere">' + U.icon('pin') + ' ใช้ตำแหน่งปัจจุบัน</button><span class="small muted" id="sHereInfo"></span></div>' +
         '<div id="sMap" style="margin-top:14px"></div>' +
         '<div class="grid g3" style="gap:0 14px;margin-top:10px">' + inp(s, 'gpsMaxAccuracy', 'ความคลาดเคลื่อน GPS สูงสุด (เมตร)', 'type="number" min="10"', 'ถ้าสัญญาณแย่กว่านี้จะให้ลองใหม่') + '</div></div>' +
 
-        '<div class="card"><h3>🕘 เวลาปฏิบัติราชการ</h3><div class="grid g3" style="gap:0 14px">' + inp(s, 'workStart', 'เวลาเข้างาน (หลังจากนี้ = สาย)', 'type="time"') + inp(s, 'workEnd', 'เวลาเลิกงาน', 'type="time"') + '</div>' +
+        '<div class="card"><h3>' + U.icon('clock') + ' เวลาปฏิบัติราชการ</h3><div class="grid g3" style="gap:0 14px">' + inp(s, 'workStart', 'เวลาเข้างาน (หลังจากนี้ = สาย)', 'type="time"') + inp(s, 'workEnd', 'เวลาเลิกงาน', 'type="time"') + '</div>' +
         area(s, 'holidays', 'วันหยุดราชการ / วันหยุดโรงเรียน', 'บรรทัดละ 1 วัน รูปแบบ ปปปป-ดด-วว (ปี ค.ศ.) ตามด้วยชื่อวันหยุด เช่น 2026-12-05 วันพ่อแห่งชาติ · เสาร์-อาทิตย์เป็นวันหยุดอัตโนมัติ', 5) + '</div>' +
 
-        '<div class="card"><h3>🙂 การสแกนใบหน้า</h3>' + toggle('liveness', 'ตรวจการกระพริบตา (ป้องกันการใช้รูปถ่ายมาสแกน)') +
+        '<div class="card"><h3>' + U.icon('face') + ' การสแกนใบหน้า</h3>' + toggle('liveness', 'ตรวจการกระพริบตา (ป้องกันการใช้รูปถ่ายมาสแกน)') +
         '<div class="grid g3" style="gap:0 14px">' + inp(s, 'faceThreshold', 'ความเข้มงวดการจับคู่ใบหน้า', 'type="number" step="0.01" min="0.3" max="0.7"', 'ค่าน้อย = เข้มงวดขึ้น (แนะนำ 0.45–0.55)') + '</div></div>' +
 
         '</form>';

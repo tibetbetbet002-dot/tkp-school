@@ -401,3 +401,16 @@ footer a { color: #fff; }
   .site .nav-links.open { display: flex; animation: rise .25s ease; }
   .site .nav-links a { padding: 12px 16px; }
 }
+
+/* ---------- ไอคอนเส้น (แทนอิโมจิ) ---------- */
+[data-icon] { display: inline-flex; vertical-align: -0.18em; }
+.topbar .icon, .ticker b .icon { width: 1em; height: 1em; }
+.side button .icon { width: 1.15em; height: 1.15em; color: var(--purple-500); }
+.side button.active .icon { color: var(--purple-700); }
+.card h3 .icon { color: var(--purple-500); vertical-align: -0.15em; margin-right: 2px; }
+.service .ic { color: var(--purple-700); }
+.service .ic .icon { width: 28px; height: 28px; }
+.contact-ic { width: 44px; height: 44px; flex: none; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(135deg, var(--purple-100), var(--gold-100)); color: var(--purple-700); }
+.kpi .ic .icon, .feature .ic .icon { width: 24px; height: 24px; }
+.result .big .icon { width: 44px; height: 44px; stroke-width: 2.5; }
+.news-img > .icon { width: 56px; height: 56px; color: var(--gold-400); }
